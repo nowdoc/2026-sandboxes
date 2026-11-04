@@ -1,0 +1,12 @@
+.env
+*.env
+data/
+gateway/keys/*.conf
+state/
+runtimes/microsandbox/home/
+runtimes/microsandbox/rootfs/
+runtimes/microsandbox/tasks/
+runtimes/sbx/prefix/
+runtimes/e2b/state/
+node_modules/
+__pycache__/

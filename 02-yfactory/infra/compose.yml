@@ -1,0 +1,19 @@
+name: ynfra
+# Networks only; services are in services/*.yml.
+include:
+  - { path: services/garage.yml, project_directory: . }
+  - { path: services/litellm.yml, project_directory: . }
+  - { path: services/monitoring.yml, project_directory: . }
+  - { path: services/proxy.yml, project_directory: . }
+  - { path: services/sandbox.yml, project_directory: . }
+  - { path: services/yfactory.yml, project_directory: . }
+
+networks:
+  core: {}
+  control:
+    internal: true
+  egress: {}
+  monitoring: {}
+  vms:
+    internal: true
+    ipam: { config: [{ subnet: 10.99.0.0/24 }] }

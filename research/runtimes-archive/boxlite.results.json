@@ -1,0 +1,54 @@
+{
+ "runtime": "boxlite",
+ "version": "0.11.0",
+ "status": "partial",
+ "kvm_used": true,
+ "tests": {
+  "install": {
+   "result": "pass",
+   "detail": "Apache-2.0, bez uctu. CLI tar.gz (sha256 OK) nebo pip wheel (python3-venv na hostu chybi, wheel rozbalen rucne). Bez demona: 1 proces boxlite-shim (+bwrap) na box. host user nema pristup k /dev/kvm (neni ve skupine kvm) -> BoxLite odmitne start; testovano pres sudo setpriv --groups=...,<kvm-gid>."
+  },
+  "headless": {
+   "result": "pass",
+   "detail": "CLI i Python SDK bezi bez TTY; create/start/exec/rm. Box s entrypoint/cmd (docker:dind) nutno spustit explicitne `start`; image bez cmd se nastartuje pri prvnim exec."
+  },
+  "adapter": {
+   "result": "pass",
+   "detail": "orchestrator/adapters/boxlite.py (CLI pres subprocess), run_adapter.py ho overil. tar pres stdin do exec funguje (`boxlite exec -i box -- sh -c 'tar xf -'`)."
+  },
+  "cold_start": {
+   "result": "pass",
+   "detail": "create+start+prvni exec 2.47/2.37/2.41 s (median 2.41, image v cache). Prvni pull python:3.13-slim ~14 s."
+  },
+  "egress": {
+   "result": "partial",
+   "detail": "DEFAULT JE ALLOW-ALL (prazdny allow_net = bez omezeni). S --allow-net <IP gateway> je zbytek odmitnut (1.1.1.1, 169.254.169.254, 192.168.1.1, <host>:22, docker bridge) - zmereno tests/probe.py a guest_net.py. DNS ale zustava otevrene (example.com se resolvuje i pri allowlistu; DNS exfiltrace mozna). Hostnamova pravidla jen pro SNI/Host na 80/443 (TCP connect na 1.1.1.1:443 projde a je zahozen). Bez allow-net je host loopback dosazitelny jako host.boxlite.internal (192.168.127.254)."
+  },
+  "credentials": {
+   "result": "partial",
+   "detail": "Jen Python/Rust SDK (Secret(name,value,hosts)), CLI to neumi. V guestu pouze placeholder <BOXLITE_SECRET:name>, hodnota v env/souborech neni (grep prazdny). Substituce overena na verejnem httpbin.org/headers (X-Auth: FAKE-SECRET-boxlite-123) - ale NE na echo serveru na hostiteli: MITM vraci 502 (upstream overuje cert; SSL_CERT_FILE nepomohl). Funguje jen HTTPS; na plain HTTP se placeholder predava beze zmeny. Placeholder na nepovoleny host: bez allowlistu odejde nezmeneny (neuniklo tajemstvi, ale neni blokovano), s allowlistem je spojeni zahozeno."
+  },
+  "gateway": {
+   "result": "partial",
+   "detail": "LLM gw i pkg proxy dosazitelne (allow-net 172.18.0.4/172.18.0.2); packages_via_proxy OK. llm_via_gateway 403 protoze gateway vidi zdroj 172.18.0.1 (host bridge, gvproxy bezi na hostiteli) pro VSECHNY boxy -> mapovani zdrojova IP->klic neda rozlisit ulohy. Identita by sla pres per-task Secret placeholder v Authorization (vyzaduje HTTPS na gateway) nebo per-task port/cesta na gateway."
+  },
+  "compose": {
+   "result": "fail",
+   "detail": "0/15. Guest kernel 6.12.87 nema bridge ani netfilter (`ip link add type bridge` -> Not supported; iptables nat table neexistuje); dockerd: 'failed to create bridge docker0 via netlink: operation not supported'. Zkouseno --cap-add ALL, --iptables=false. Vlastni kernel nezkouseno."
+  },
+  "isolation": {
+   "result": "pass",
+   "detail": "3 boxy: kazdy vlastni gvproxy + disk (~/boxes/<id>), vzajemne se nevidi (timeout na 192.168.127.3), /tmp soubory oddelene. Hostitele dosahne jen pres allow-net IP; s prazdnym allow_net i host loopback."
+  },
+  "lifecycle": {
+   "result": "partial",
+   "detail": "3 paralelni boxy OK (~250 MB RSS kazdy). NALEZ: `boxlite stop` i `rm -f` z CLI NEUKONCI proces boxlite-shim (VM zustane bezet, ~120-540 MB); adapter ho proto zabije sam (pgrep na /boxes/<id>/bin/boxlite-shim). SDK box.stop() shim ukoncil. Snapshot: SDK box.snapshot.create(name=)/restore existuje (restore na zastavenem boxu overen, obsah neověřen); clone_box OK. Pause/resume neni."
+  }
+ },
+ "cold_start_s": 2.41,
+ "ram_idle_mb": 254,
+ "compose_healthy": 0,
+ "needs_account": false,
+ "daemons": 0,
+ "verdict": "Mikro-VM bez demona s fungujicim IP allowlistem a HTTPS substitucí tajemstvi, ale default je allow-all, DNS zustava otevrene a Docker Compose uvnitr nejde (kernel bez bridge/netfilter). Gateway nerozlisi ulohy podle IP a CLI neuklidi VM procesy po rm, takze pro PoC pouzitelne jen bez Compose."
+}

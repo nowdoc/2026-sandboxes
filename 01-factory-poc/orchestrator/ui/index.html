@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="cs">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yfactory</title>
+<link rel="stylesheet" href="style.css">
+<header><h1>Yfactory</h1><span id="info"></span></header>
+<main>
+  <section>
+    <h2>Tickety <small id="repo"></small></h2>
+    <p>Runtime: <select id="runtime"></select> <span id="msg"></span></p>
+    <table><thead><tr><th>#</th><th>Ticket</th><th>Labely</th><th></th></tr></thead><tbody id="issues"></tbody></table>
+  </section>
+  <section>
+    <h2>Implementace</h2>
+    <table><thead><tr><th>Stav</th><th>Runtime</th><th>Ticket</th><th>PR</th><th>Start</th><th>Doba</th></tr></thead><tbody id="runs"></tbody></table>
+  </section>
+</main>
+<script src="app.js"></script>

@@ -1,0 +1,28 @@
+{
+ "blocked": {
+  "direct_ip_internet": false,
+  "external_dns": false,
+  "metadata_ip": true,
+  "lan_router": false,
+  "host_lan_ssh": false,
+  "forgejo_by_name": false,
+  "litellm_by_name": false,
+  "proxy_to_nonallowed_domain": true,
+  "proxy_to_internal_forgejo": true,
+  "litellm_admin_via_gateway": false,
+  "litellm_keygen_via_gateway": false,
+  "patch_cannot_write_dotgit": true,
+  "patch_blocks_workflow": true,
+  "patch_blocks_gitmodules": true,
+  "patch_blocks_symlink": true,
+  "patch_blocks_binary": true,
+  "patch_allows_normal": true,
+  "sender_bot_rejected": true,
+  "sender_owner_allowed": true,
+  "sender_unknown_rejected": true
+ },
+ "works": {
+  "llm_via_gateway": false,
+  "packages_via_proxy": false
+ }
+}

@@ -1,0 +1,10 @@
+services:
+  # VMs reach packages only through this domain allowlist.
+  proxy:
+    image: ubuntu/squid:6.10-24.10_beta
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    command: ["-f", "/config/proxy/squid.conf", "-NYC"]
+    volumes: [./config:/config:ro]
+    healthcheck: { test: ["CMD", "bash", "-c", "</dev/tcp/127.0.0.1/3128"], interval: 10s }
+    networks: { core: {}, vms: { ipv4_address: 10.99.0.11 } }

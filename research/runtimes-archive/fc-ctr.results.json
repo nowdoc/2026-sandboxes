@@ -1,0 +1,54 @@
+{
+ "runtime": "fc-ctr (firecracker-containerd main be68640 + Firecracker 1.17.0, kernel 4.14.174)",
+ "version": "main@2026-07-16",
+ "status": "partial",
+ "kvm_used": true,
+ "tests": {
+  "install": {
+   "result": "partial",
+   "detail": "build v Dockeru ~6 min celkem, bez releasu; runc musi byt 1.1.x; 2 daemony+shim/VM; Apache-2.0; bez uctu"
+  },
+  "headless": {
+   "result": "pass",
+   "detail": "sudo + ctr/fcvm bez TTY; ctr exec musi mit </dev/null"
+  },
+  "adapter": {
+   "result": "partial",
+   "detail": "orchestrator/adapters/fc_ctr.py create/exec/destroy funguji; stdin EOF se neprenasi, tar jen pres head -c N"
+  },
+  "cold_start": {
+   "result": "pass",
+   "detail": "6.2 s median (6.27/6.18/6.22)"
+  },
+  "egress": {
+   "result": "partial",
+   "detail": "ven (IP, metadata, LAN, DNS) closed; ale host (10.201.77.1:22, <host>:22/4000) otevreny; allowlist neimplementovan"
+  },
+  "credentials": {
+   "result": "untested",
+   "detail": "runtime nema injection mimo sandbox"
+  },
+  "gateway": {
+   "result": "partial",
+   "detail": "LLM GW pres publikovany host port <host>:4000 dosazitelna, pkg-gw ne; identita = zdrojova IP VM 10.201.77.x (neovereno na gw)"
+  },
+  "compose": {
+   "result": "partial",
+   "detail": "15/15 healthy za ~20 s ve VM s privileged dind, nutne rucni cgroup mount + --allow-direct-routing; nslookup fail (apk bez internetu)"
+  },
+  "isolation": {
+   "result": "partial",
+   "detail": "oddelene disky; VM se vidi po L2; host dosazitelny"
+  },
+  "lifecycle": {
+   "result": "partial",
+   "detail": "cleanup ok, 3 paralelne ok (~12 s), pause/resume ok, VM snapshot neexistuje"
+  }
+ },
+ "cold_start_s": 6.2,
+ "ram_idle_mb": 180,
+ "compose_healthy": "15/15",
+ "needs_account": false,
+ "daemons": 2,
+ "verdict": "Funguje jako microVM runtime s tvrdou KVM izolaci a defaultne bez egressu, ale je to low-level stavebnice (vlastni build, runc 1.1.x, stary 4.14 kernel, bez EOF na stdin, bez egress allowlistu/credential injection ani VM snapshotu). Compose bezi jen s privileged dind a rucnimi upravami; pro PoC je to vice prace nez Docker/gVisor."
+}

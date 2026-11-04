@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 700" width="1160" height="700" role="img" aria-label="yfactory architecture: the orchestrator holds the GitHub, S3 and LiteLLM master credentials, a separate sandbox container runs the microVMs, which reach only the task API and the package proxy">
+<style>svg{font-family:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.bg{fill:#ffffff}
+.t{fill:#1f2328;font-size:13px;font-weight:600}
+.s{fill:#59636e;font-size:11px}
+.zl{fill:#59636e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+.card{fill:#ffffff;stroke:#d1d9e0;stroke-width:1}
+.ext{fill:#ffffff;stroke:#8c959f;stroke-width:1;stroke-dasharray:4 3}
+.z-host{fill:#f6f8fa;stroke:#d1d9e0}
+.z-ctr{fill:#ffffff;stroke:#8c959f}
+.z-yf{fill:#eefbf1;stroke:#7fd897}
+.z-vm{fill:#f8f0ff;stroke:#c9a3ff}
+.z-sb{fill:#fff8dc;stroke:#e3b341}
+.z-core{fill:#eef6ff;stroke:#80bfff}
+.ln{fill:none;stroke:#6e7781;stroke-width:1.5}
+.vm{fill:none;stroke:#bf8700;stroke-width:1.75}
+.you{fill:none;stroke:#8250df;stroke-width:1.5;stroke-dasharray:5 4}
+.ah{fill:#6e7781}.ah-vm{fill:#bf8700}.ah-you{fill:#8250df}
+.lbl{fill:#57606a;font-size:11px}
+.lbl-vm{fill:#9a6700;font-size:11px;font-weight:600}
+.lbl-you{fill:#8250df;font-size:11px;font-weight:600}
+.n{fill:#ffffff;font-size:11px;font-weight:700}
+.nb{fill:#1f2328}
+.bnd{stroke:#cf222e;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+.lbl-bnd{fill:#cf222e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0d1117}
+.t{fill:#e6edf3}.s,.zl{fill:#9198a1}
+.card{fill:#161b22;stroke:#3d444d}
+.ext{fill:#0d1117;stroke:#656c76}
+.z-host{fill:#11161d;stroke:#30363d}
+.z-ctr{fill:#161b22;stroke:#656c76}
+.z-yf{fill:#0f2a19;stroke:#2f7d45}
+.z-vm{fill:#24173a;stroke:#7a52c7}
+.z-sb{fill:#2a2108;stroke:#9e6a03}
+.z-core{fill:#0c2340;stroke:#1f6feb}
+.ln{stroke:#8b949e}.ah{fill:#8b949e}
+.vm{stroke:#e3b341}.ah-vm{fill:#e3b341}.lbl-vm{fill:#e3b341}
+.you{stroke:#bc8cff}.ah-you{fill:#bc8cff}.lbl-you{fill:#bc8cff}
+.lbl{fill:#9198a1}
+.nb{fill:#e6edf3}.n{fill:#0d1117}
+.bnd{stroke:#f85149}.lbl-bnd{fill:#f85149}
+}
+</style>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+<marker id="av" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-vm"/></marker>
+<marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-you"/></marker>
+</defs>
+<rect class="bg" width="1160" height="700" rx="16"/>
+<rect class="z-host" x="200" y="20" width="750" height="660" rx="12"/>
+<text class="zl" x="214" y="40"></text>
+<text class="zl" x="216" y="668" text-anchor="start">HOST · DOCKER</text>
+<rect class="z-yf" x="220" y="60" width="300" height="225" rx="12"/>
+<text class="zl" x="234" y="80">YFACTORY CONTAINER</text>
+<text class="s" x="234" y="94">GitHub · S3 · LiteLLM master · no /dev/kvm</text>
+<rect class="z-ctr" x="220" y="305" width="300" height="355" rx="12"/>
+<text class="zl" x="234" y="325">SANDBOX CONTAINER</text>
+<text class="s" x="234" y="339">/dev/kvm · no credentials</text>
+<rect class="z-vm" x="245" y="355" width="250" height="290" rx="12"/>
+<text class="zl" x="259" y="375">MICROVMS · MSB</text>
+<text class="s" x="259" y="389">default-deny egress</text>
+<rect class="z-sb" x="560" y="330" width="160" height="330" rx="12"/>
+<text class="zl" x="574" y="350"></text>
+<text class="zl" x="574" y="632" text-anchor="start">VMS NET</text>
+<text class="s" x="574" y="646" text-anchor="start">internal · 10.99.0.0/24</text>
+<rect class="z-core" x="760" y="60" width="180" height="580" rx="12"/>
+<text class="zl" x="774" y="80">CORE NET</text>
+<rect class="card" x="20" y="100" width="150" height="80" rx="8"/>
+<text class="t" x="95.0" y="137.0" text-anchor="middle">You</text>
+<text class="s" x="95.0" y="153.0" text-anchor="middle">LAN · browser · make</text>
+<rect class="card" x="245" y="110" width="250" height="70" rx="8"/>
+<text class="t" x="370.0" y="142.0" text-anchor="middle">orchestrator</text>
+<text class="s" x="370.0" y="158.0" text-anchor="middle">UI · API :8080 · task API :9001</text>
+<rect class="card" x="385" y="200" width="110" height="60" rx="8"/>
+<text class="t" x="440.0" y="227.0" text-anchor="middle">git repos</text>
+<text class="s" x="440.0" y="243.0" text-anchor="middle">mirrors · runs</text>
+<rect class="card" x="265" y="405" width="210" height="66" rx="8"/>
+<text class="t" x="370.0" y="435.0" text-anchor="middle">VM yf-&lt;id&gt;</text>
+<text class="s" x="370.0" y="451.0" text-anchor="middle">opencode · git · ~/.yf-env</text>
+<rect class="card" x="265" y="505" width="210" height="66" rx="8"/>
+<text class="t" x="370.0" y="535.0" text-anchor="middle">VM yf-&lt;id&gt;</text>
+<text class="s" x="370.0" y="551.0" text-anchor="middle">one VM per run</text>
+<text class="zl" x="370" y="615" text-anchor="middle">· · ·</text>
+<rect class="card" x="575" y="398" width="130" height="80" rx="8"/>
+<text class="t" x="640.0" y="428.0" text-anchor="middle">task API</text>
+<text class="s" x="640.0" y="444.0" text-anchor="middle">orchestrator · 10.99.0.10</text>
+<text class="s" x="640.0" y="458.0" text-anchor="middle">:9001 LLM · git · MCP</text>
+<rect class="card" x="575" y="498" width="130" height="80" rx="8"/>
+<text class="t" x="640.0" y="528.0" text-anchor="middle">proxy</text>
+<text class="s" x="640.0" y="544.0" text-anchor="middle">squid · 10.99.0.11</text>
+<text class="s" x="640.0" y="558.0" text-anchor="middle">optional · allowlist</text>
+<rect class="card" x="775" y="100" width="150" height="70" rx="8"/>
+<text class="t" x="850.0" y="132.0" text-anchor="middle">Garage S3</text>
+<text class="s" x="850.0" y="148.0" text-anchor="middle">bucket yfactory</text>
+<rect class="card" x="775" y="398" width="150" height="80" rx="8"/>
+<text class="t" x="850.0" y="435.0" text-anchor="middle">LiteLLM</text>
+<text class="s" x="850.0" y="451.0" text-anchor="middle">virtual key per run</text>
+<rect class="card" x="775" y="486" width="150" height="40" rx="8"/>
+<text class="t" x="850.0" y="510.0" text-anchor="middle">Postgres</text>
+<rect class="ext" x="980" y="100" width="160" height="70" rx="8"/>
+<text class="t" x="1060.0" y="132.0" text-anchor="middle">GitHub</text>
+<text class="s" x="1060.0" y="148.0" text-anchor="middle">origin repos</text>
+<rect class="ext" x="980" y="403" width="160" height="70" rx="8"/>
+<text class="t" x="1060.0" y="435.0" text-anchor="middle">LLM provider</text>
+<text class="s" x="1060.0" y="451.0" text-anchor="middle">upstream API</text>
+<rect class="ext" x="980" y="520" width="160" height="70" rx="8"/>
+<text class="t" x="1060.0" y="552.0" text-anchor="middle">Package registries</text>
+<text class="s" x="1060.0" y="568.0" text-anchor="middle">npm · PyPI · …</text>
+<path class="ln" d="M470,110 V40 H1060 V100" marker-end="url(#a)"/>
+<text class="lbl" x="705" y="33" text-anchor="middle">fetch · push · open PR  (GITHUB_TOKEN)</text>
+<path class="ln" d="M495,135 H775" marker-end="url(#a)"/>
+<text class="lbl" x="635" y="128" text-anchor="middle">sessions · run metadata</text>
+<path class="ln" d="M495,165 H748 V413 H775" marker-end="url(#a)"/>
+<text class="lbl" x="622" y="158" text-anchor="middle">mint · revoke key</text>
+<path class="ln" d="M420,180 V200" marker-end="url(#a)"/>
+<path class="ln" d="M290,180 V305" marker-end="url(#a)"/>
+<text class="lbl" x="298" y="238" text-anchor="start">sandbox API</text>
+<text class="lbl" x="298" y="252" text-anchor="start">:7000 · control</text>
+<line class="ln" x1="850" y1="478" x2="850" y2="486"/>
+<path class="ln" d="M495,175 H630 V135 H775" marker-end="url(#a)"/>
+<text class="lbl" x="640" y="160" text-anchor="start">sessions</text>
+<path class="ln" d="M925,438 H980" marker-end="url(#a)"/>
+<path class="vm" d="M495,438 H575" marker-end="url(#av)"/>
+<text class="lbl-vm" x="535" y="430" text-anchor="middle">LLM · git</text>
+<path class="vm" d="M495,538 H575" marker-end="url(#av)"/>
+<text class="lbl-vm" x="535" y="530" text-anchor="middle">:3128</text>
+<path class="vm" d="M620,398 V230 H495" marker-end="url(#av)"/>
+<text class="lbl-vm" x="557" y="223" text-anchor="middle">own run only</text>
+<path class="vm" d="M705,438 H775" marker-end="url(#av)"/>
+<text class="lbl-vm" x="740" y="430" text-anchor="middle">/v1/*</text>
+<path class="vm" d="M705,555 H980" marker-end="url(#av)"/>
+<text class="lbl-vm" x="842" y="548" text-anchor="middle">allowlisted domains</text>
+<path class="you" d="M95,180 V438 H265" marker-end="url(#ay)"/>
+<text class="lbl-you" x="103" y="430" text-anchor="start">make shell</text>
+<line class="vm" x1="980" y1="630" x2="1010" y2="630"/>
+<text class="lbl" x="1018" y="634" text-anchor="start">all VM traffic</text>
+<line class="ln" x1="980" y1="648" x2="1010" y2="648"/>
+<text class="lbl" x="1018" y="652" text-anchor="start">orchestrator calls</text>
+<line class="you" x1="980" y1="666" x2="1010" y2="666"/>
+<text class="lbl" x="1018" y="670" text-anchor="start">you, interactive</text>
+</svg>
+

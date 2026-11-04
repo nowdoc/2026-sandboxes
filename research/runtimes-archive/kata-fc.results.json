@@ -1,0 +1,16 @@
+{"runtime":"kata-fc","version":"kata-containers 4.3.1 (go shim) + firecracker 1.17.0 + containerd 2.4.2 + nerdctl 2.4.2","status":"partial","kvm_used":true,
+"tests":{
+"install":{"result":"partial","detail":"2 release tarballs (1.0 GB rs + 1.3 GB go; FC binary jen v go), vlastni containerd+devmapper thin-pool+nerdctl+CNI; shim prijima jen shipped config pod /opt/kata (reseno private mount ns + symlink); rs shim: FC bez site a chybny config; 1 vlastni demon"},
+"headless":{"result":"pass","detail":"nerdctl run/exec bez TTY pres sudo -n; navratovy kod exec se ztraci (parsovano ze stderr)"},
+"adapter":{"result":"partial","detail":"orchestrator/adapters/kata_fc.py create/exec/destroy funguje; stdin EOF se nepropaguje, tar a head -c N fungují, cat/busybox tar visi (adapter obaluje head -c N)"},
+"cold_start":{"result":"pass","detail":"1.87/2.16/2.05 s, median 2.05 s vc. docker network+CNI; prvni exec ~0.1 s; s enable_debug 8-9 s"},
+"egress":{"result":"pass","detail":"11/11 blocked, packages_via_proxy ok; llm 403 unknown sandbox (IP nenamapovana); topologie docker --internal + CNI bridge, bez host firewallu"},
+"credentials":{"result":"untested","detail":"bez MITM proxy nelze; nezkouseno"},
+"gateway":{"result":"pass","detail":"gateway vidi zdrojovou IP guestu 10.77.N.100 (nginx log) -> mapovatelne IP->klic; pkg proxy dosazitelny, llm vraci 403 unknown sandbox"},
+"compose":{"result":"partial","detail":"15/15 healthy za 9 s bez --privileged ale s cap-add NET_ADMIN,SYS_ADMIN,SYS_RESOURCE,NET_RAW,MKNOD + systempaths=unconfined + remount rw cgroup; nslookup web.cz.test fail (dns kontejner bez egress pro apk)"},
+"isolation":{"result":"pass","detail":"VM v oddelenych docker sitich, A->B i host unreachable, vlastni devmapper disk; spolecny jen gateway"},
+"lifecycle":{"result":"partial","detail":"3 paralelni create 3.7 s, destroy 1.8 s; pause/unpause ok; checkpoint not implemented; destroy nechava cnitest netns soubory a IPAM stav; qemu/clh VM po failu zustaly viset (shimy nutno zabit rucne)"},
+"hypervisor_compare":{"result":"fail","detail":"cloud-hypervisor a qemu pres symlink configuration.toml: prvni exec visi >2 min, priciny nezkoumany"}
+},
+"cold_start_s":2.05,"ram_idle_mb":260,"compose_healthy":"15/15","needs_account":false,"daemons":1,
+"verdict":"Kata+Firecracker jde rozjet bez Kubernetes (Go shim, vlastni containerd+devmapper) s cold startem ~2 s, ~260 MB RAM a topologii site shodnou s docker adapterem; cena je tezka instalace (2 GB tarballu, pruchod shipped-config kontrolou, devmapper) a chybi snapshot, EOF na stdin a qemu/clh v tomhle prostredi nefungovaly. Docker Compose uvnitr VM bezi bez --privileged s nekolika cap-add, takze je to pouzitelny, ale ne nejjednodussi kandidat."}

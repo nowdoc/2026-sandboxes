@@ -1,0 +1,26 @@
+services:
+  yfactory:
+    image: ynfra/yfactory:orchestrator-${YF_VERSION}
+    container_name: yfactory
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    user: "1000:1000"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    env_file: [secrets/yfactory.env, secrets/s3.env, secrets/sandbox.env]
+    environment:
+      YF_CONFIG: /config/yfactory
+    volumes:
+      - ./data/yfactory:/data
+      - ./config:/config:ro
+    ports: ["${YF_BIND}:8090:8080", "${YF_BIND}:8092:8081"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      start_period: 60s
+    depends_on:
+      sandbox: { condition: service_healthy }
+      litellm: { condition: service_healthy }
+      garage: { condition: service_healthy }
+    # 10.99.0.10 is the only address the VMs may reach (msb rule, tcp 9001: task API, git, LLM). The UI on :8080 is not allowed.
+    networks: { core: {}, control: {}, vms: { ipv4_address: 10.99.0.10 } }

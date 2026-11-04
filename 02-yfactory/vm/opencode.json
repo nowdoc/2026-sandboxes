@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "share": "disabled",
+  "model": "litellm/GLM-5.3-Flash",
+  "small_model": "litellm/GLM-5.3-Flash",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM",
+      "options": { "baseURL": "{env:LLM_BASE_URL}/v1", "apiKey": "{env:YF_TOKEN}" },
+      "models": {
+        "GLM-5.3-Flash": { "name": "GLM-5.3-Flash", "tool_call": true },
+        "GLM-5.3": { "name": "GLM-5.3", "tool_call": true }
+      }
+    }
+  },
+  "lsp": {
+    "typescript": { "disabled": true },
+    "tsgo": { "command": ["tsgo-lsp"], "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"] }
+  },
+  "permission": { "edit": "allow", "bash": "allow", "external_directory": "allow", "webfetch": "deny", "lsp": "allow" }
+}

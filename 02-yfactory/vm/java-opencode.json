@@ -1,0 +1,1 @@
+{ "lsp": { "jdtls": { "command": ["jdtls", "--java-executable", "/usr/lib/jvm/java-25-openjdk-amd64/bin/java"] } } }

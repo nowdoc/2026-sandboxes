@@ -1,0 +1,30 @@
+# Local environment and secrets: copy from *.example and edit per host.
+.env
+*.env
+!*.env.example
+!.env.example
+secrets/*
+!secrets/.gitkeep
+
+# Runtime state (data, mirrors, run history, VM images)
+data/
+state/
+01-factory-poc/gateway/keys/*.conf
+01-factory-poc/runtimes/microsandbox/home/
+01-factory-poc/runtimes/microsandbox/rootfs/
+01-factory-poc/runtimes/microsandbox/tasks/
+01-factory-poc/runtimes/sbx/prefix/
+01-factory-poc/runtimes/e2b/state/
+
+# Build and tooling
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp

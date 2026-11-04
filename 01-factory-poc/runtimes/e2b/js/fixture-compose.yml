@@ -1,0 +1,162 @@
+name: fixture
+services:
+  dns:
+    image: alpine:3.22
+    command: sh -c 'apk add -q dnsmasq && exec dnsmasq -k --address=/cz.test/172.30.0.2'
+    networks:
+      app: {ipv4_address: 172.30.0.2}
+  web:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo web > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  api:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo api > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  worker:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo worker > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  scheduler:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo scheduler > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  mail:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo mail > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  search:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo search > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  cache:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo cache > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  queue:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo queue > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  files:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo files > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  auth:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo auth > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  billing:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo billing > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  reports:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo reports > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  admin:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo admin > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  metrics:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo metrics > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+  db:
+    image: busybox:1.37
+    command: sh -c 'mkdir -p /www && echo db > /www/index.html && exec httpd -f -p 8080 -h /www'
+    dns: [172.30.0.2]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 2s
+      retries: 30
+    networks: [app]
+    depends_on: [dns]
+networks:
+  app:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

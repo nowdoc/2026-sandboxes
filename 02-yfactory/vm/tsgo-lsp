@@ -1,0 +1,8 @@
+#!/bin/sh
+# Without a project config tsgo sees only open files and finds no cross-file references.
+# The generated jsconfig.json is git-excluded, so it never reaches a commit.
+if [ ! -e tsconfig.json ] && [ ! -e jsconfig.json ] && [ -d .git ]; then
+  printf '{"compilerOptions":{"allowJs":true,"jsx":"preserve","module":"esnext","moduleResolution":"bundler","target":"esnext","noEmit":true},"exclude":["node_modules","dist","build"]}\n' > jsconfig.json
+  grep -qx /jsconfig.json .git/info/exclude 2>/dev/null || echo /jsconfig.json >> .git/info/exclude
+fi
+exec tsc --lsp --stdio

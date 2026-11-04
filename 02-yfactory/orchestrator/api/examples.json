@@ -1,0 +1,27 @@
+{
+  "valid": [
+    {"id": "a0000001", "type": "review_comment", "payload": {"path": "src/auth.ts", "line": 42, "start_line": 40, "severity": "major", "category": "security", "confidence": 0.8, "body": "The token is compared with `==`, use a constant time comparison.", "suggestion": "if (!timingSafeEqual(a, b)) throw new Error(\"bad token\");"}},
+    {"id": "a0000002", "type": "review_submit", "payload": {"verdict": "request_changes", "summary": "One security issue and two nits, details inline."}},
+    {"id": "a0000003", "type": "comment", "payload": {"target": "pull_request", "body": "Fixed in abc1234, tests added.", "in_reply_to": "thread-17"}},
+    {"id": "a0000004", "type": "thread_resolve", "payload": {"thread_id": "thread-17", "resolution": "addressed", "commit_sha": "abc1234"}},
+    {"id": "a0000005", "type": "progress", "payload": {"phase": "testing", "message": "Running the unit tests", "percent": 60}},
+    {"id": "a0000006", "type": "artifact", "payload": {"name": "junit.xml", "media_type": "application/xml", "vm_path": "/workspace/target/surefire-reports/junit.xml"}},
+    {"id": "a0000007", "type": "finish", "payload": {"outcome": "done", "summary": "Implemented the retry, 12 tests pass.", "pull_request": {"title": "Add retry to the mail sender", "body": "Retries 3 times with backoff."}}},
+    {"id": "a0000008", "type": "question", "payload": {"question": "Should the retry also cover HTTP 429?", "options": [{"id": "yes", "label": "Yes"}, {"id": "no", "label": "No"}], "blocking": true}},
+    {"id": "a0000009", "type": "fetch_context", "payload": {"what": "ci_status", "ref": "123"}},
+    {"id": "a0000010", "type": "request_domain", "payload": {"domains": ["repo.maven.apache.org", "*.gradle.org"], "reason": "The build downloads the Gradle wrapper."}},
+    {"id": "a0000011", "type": "propose_environment", "payload": {"summary": "Node 22 is missing.", "repository": {"setup": "npm ci", "env": {"CI": "1"}}, "environment": null, "allowlist": ["registry.npmjs.org"]}},
+    {"id": "a0000012", "type": "propose_followup", "payload": {"title": "Remove dead code in legacy/", "body": "legacy/ is not imported anywhere.", "kind": "tech_debt", "path": "legacy/index.ts"}}
+  ],
+  "invalid": [
+    {"why": "unknown type", "action": {"id": "b0000001", "type": "push_to_main", "payload": {}}},
+    {"why": "line 0", "action": {"id": "b0000002", "type": "review_comment", "payload": {"path": "a.ts", "line": 0, "severity": "nit", "category": "style", "body": "x"}}},
+    {"why": "path traversal", "action": {"id": "b0000003", "type": "review_comment", "payload": {"path": "../etc/passwd", "line": 1, "severity": "nit", "category": "style", "body": "x"}}},
+    {"why": "extra field", "action": {"id": "b0000004", "type": "progress", "payload": {"phase": "testing", "message": "x", "token": "secret"}}},
+    {"why": "payload of another type", "action": {"id": "b0000005", "type": "finish", "payload": {"verdict": "approve", "summary": "x"}}},
+    {"why": "artifact with both content and vm_path", "action": {"id": "b0000006", "type": "artifact", "payload": {"name": "a", "media_type": "text/plain", "content": "x", "vm_path": "/workspace/a"}}},
+    {"why": "artifact path outside workspace", "action": {"id": "b0000007", "type": "artifact", "payload": {"name": "a", "media_type": "text/plain", "vm_path": "/etc/shadow"}}},
+    {"why": "bad domain", "action": {"id": "b0000008", "type": "request_domain", "payload": {"domains": ["localhost"], "reason": "x"}}},
+    {"why": "short id", "action": {"id": "x", "type": "progress", "payload": {"phase": "setup", "message": "x"}}}
+  ]
+}

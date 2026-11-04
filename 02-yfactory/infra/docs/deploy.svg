@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 250" width="1160" height="250" role="img" aria-label="Deploy: make deploy sets the version, make up starts all services, the sandbox image reaches msb as a tar">
+<style>svg{font-family:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.bg{fill:#ffffff}
+.t{fill:#1f2328;font-size:13px;font-weight:600}
+.s{fill:#59636e;font-size:11px}
+.zl{fill:#59636e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+.card{fill:#ffffff;stroke:#d1d9e0;stroke-width:1}
+.ext{fill:#ffffff;stroke:#8c959f;stroke-width:1;stroke-dasharray:4 3}
+.z-host{fill:#f6f8fa;stroke:#d1d9e0}
+.z-ctr{fill:#ffffff;stroke:#8c959f}
+.z-yf{fill:#eefbf1;stroke:#7fd897}
+.z-vm{fill:#f8f0ff;stroke:#c9a3ff}
+.z-sb{fill:#fff8dc;stroke:#e3b341}
+.z-core{fill:#eef6ff;stroke:#80bfff}
+.ln{fill:none;stroke:#6e7781;stroke-width:1.5}
+.vm{fill:none;stroke:#bf8700;stroke-width:1.75}
+.you{fill:none;stroke:#8250df;stroke-width:1.5;stroke-dasharray:5 4}
+.ah{fill:#6e7781}.ah-vm{fill:#bf8700}.ah-you{fill:#8250df}
+.lbl{fill:#57606a;font-size:11px}
+.lbl-vm{fill:#9a6700;font-size:11px;font-weight:600}
+.lbl-you{fill:#8250df;font-size:11px;font-weight:600}
+.n{fill:#ffffff;font-size:11px;font-weight:700}
+.nb{fill:#1f2328}
+.bnd{stroke:#cf222e;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+.lbl-bnd{fill:#cf222e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0d1117}
+.t{fill:#e6edf3}.s,.zl{fill:#9198a1}
+.card{fill:#161b22;stroke:#3d444d}
+.ext{fill:#0d1117;stroke:#656c76}
+.z-host{fill:#11161d;stroke:#30363d}
+.z-ctr{fill:#161b22;stroke:#656c76}
+.z-yf{fill:#0f2a19;stroke:#2f7d45}
+.z-vm{fill:#24173a;stroke:#7a52c7}
+.z-sb{fill:#2a2108;stroke:#9e6a03}
+.z-core{fill:#0c2340;stroke:#1f6feb}
+.ln{stroke:#8b949e}.ah{fill:#8b949e}
+.vm{stroke:#e3b341}.ah-vm{fill:#e3b341}.lbl-vm{fill:#e3b341}
+.you{stroke:#bc8cff}.ah-you{fill:#bc8cff}.lbl-you{fill:#bc8cff}
+.lbl{fill:#9198a1}
+.nb{fill:#e6edf3}.n{fill:#0d1117}
+.bnd{stroke:#f85149}.lbl-bnd{fill:#f85149}
+}
+</style>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+<marker id="av" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-vm"/></marker>
+<marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-you"/></marker>
+</defs>
+<rect class="bg" width="1160" height="250" rx="16"/>
+<rect class="card" x="20" y="40" width="210" height="70" rx="8"/>
+<text class="t" x="125.0" y="72.0" text-anchor="middle">orchestrator, sandbox</text>
+<text class="s" x="125.0" y="88.0" text-anchor="middle">ynfra/yfactory in local Docker</text>
+<rect class="card" x="20" y="150" width="210" height="70" rx="8"/>
+<text class="t" x="125.0" y="182.0" text-anchor="middle">vm-&lt;version&gt;</text>
+<text class="s" x="125.0" y="198.0" text-anchor="middle">ynfra/yfactory in local Docker</text>
+<rect class="card" x="290" y="40" width="190" height="70" rx="8"/>
+<text class="t" x="385.0" y="72.0" text-anchor="middle">make deploy V=&lt;version&gt;</text>
+<text class="s" x="385.0" y="88.0" text-anchor="middle">writes YF_VERSION to .env</text>
+<rect class="card" x="540" y="40" width="190" height="70" rx="8"/>
+<text class="t" x="635.0" y="72.0" text-anchor="middle">make up</text>
+<text class="s" x="635.0" y="88.0" text-anchor="middle">init secrets, S3 bucket</text>
+<rect class="card" x="790" y="40" width="170" height="70" rx="8"/>
+<text class="t" x="875.0" y="72.0" text-anchor="middle">docker compose up</text>
+<text class="s" x="875.0" y="88.0" text-anchor="middle">all services</text>
+<rect class="card" x="540" y="150" width="190" height="70" rx="8"/>
+<text class="t" x="635.0" y="182.0" text-anchor="middle">docker save</text>
+<text class="s" x="635.0" y="198.0" text-anchor="middle">data/images/*.tar</text>
+<rect class="card" x="790" y="150" width="170" height="70" rx="8"/>
+<text class="t" x="875.0" y="182.0" text-anchor="middle">sandbox start</text>
+<text class="s" x="875.0" y="198.0" text-anchor="middle">msb load the tar</text>
+<rect class="card" x="1010" y="150" width="130" height="70" rx="8"/>
+<text class="t" x="1075.0" y="182.0" text-anchor="middle">microVMs</text>
+<text class="s" x="1075.0" y="198.0" text-anchor="middle">one per run</text>
+<path class="ln" d="M230,75 H290" marker-end="url(#a)"/>
+<path class="ln" d="M480,75 H540" marker-end="url(#a)"/>
+<path class="ln" d="M730,75 H790" marker-end="url(#a)"/>
+<path class="ln" d="M875,110 V150" marker-end="url(#a)"/>
+<path class="ln" d="M230,185 H540" marker-end="url(#a)"/>
+<path class="ln" d="M730,185 H790" marker-end="url(#a)"/>
+<path class="ln" d="M960,185 H1010" marker-end="url(#a)"/>
+<text class="lbl" x="385" y="178" text-anchor="middle">during make up</text>
+</svg>
+

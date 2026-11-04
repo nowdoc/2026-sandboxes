@@ -1,0 +1,6 @@
+<settings>
+  <proxies>
+    <proxy><id>http</id><active>true</active><protocol>http</protocol><host>${env.YF_PROXY_HOST}</host><port>3128</port></proxy>
+    <proxy><id>https</id><active>true</active><protocol>https</protocol><host>${env.YF_PROXY_HOST}</host><port>3128</port></proxy>
+  </proxies>
+</settings>

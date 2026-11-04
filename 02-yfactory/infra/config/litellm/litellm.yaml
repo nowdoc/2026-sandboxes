@@ -1,0 +1,19 @@
+model_list:
+  - model_name: mock
+    litellm_params:
+      model: openai/mock
+      api_key: not-used
+      mock_response: "mock response"
+  - model_name: GLM-5.3-Flash
+    litellm_params:
+      model: openai/GLM-5.3-Flash
+      api_base: os.environ/OPENAI_API_URL
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: GLM-5.3
+    litellm_params:
+      model: openai/GLM-5.3
+      api_base: os.environ/OPENAI_API_URL
+      api_key: os.environ/OPENAI_API_KEY
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

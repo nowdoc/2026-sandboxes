@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    env_file: secrets/db.env
+    volumes: [./data/litellm-db:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U litellm"], interval: 3s, retries: 20 }
+    networks: [core]
+
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.106.6
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    command: ["--config", "/config/litellm/litellm.yaml", "--port", "4000"]
+    env_file: [secrets/db.env, secrets/litellm.env]
+    volumes: [./config:/config:ro]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness', timeout=3)"]
+      interval: 10s
+      start_period: 60s
+    depends_on: { db: { condition: service_healthy } }
+    networks: [core]

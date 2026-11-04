@@ -1,0 +1,59 @@
+{
+ "runtime": "openshell",
+ "version": "0.1.6",
+ "status": "partial",
+ "kvm_used": true,
+ "tests": {
+  "install": {
+   "result": "pass",
+   "detail": "release tarbally bez uctu/loginu; install.sh (deb+systemd user) nespusten. 1 gateway + driver; docker driver 2 kontejnery/sandbox, vm driver libkrun. Nutny gateway_jwt bundle + allow_unauthenticated_users pro lokal."
+  },
+  "headless": {
+   "result": "pass",
+   "detail": "create --detach --no-tty + exec --no-tty bez TTY; gateway jako root pres sudo"
+  },
+  "adapter": {
+   "result": "pass",
+   "detail": "adapters/openshell.py (docker i vm); tar pres stdin OK; jmeno sandboxu max 19 znaku -> task_id max 6 znaku"
+  },
+  "cold_start": {
+   "result": "pass",
+   "detail": "docker driver 1.30 s, vm driver 2.24 s median (lokalni image; prvni VM build 16.7 s)"
+  },
+  "egress": {
+   "result": "pass",
+   "detail": "default-deny, probe: vse blokovano na obou driverech; external_dns v probe falesny poplach (syntetic IP 198.18.x, connect EACCES); DNS tunel neoverena"
+  },
+  "credentials": {
+   "result": "pass",
+   "detail": "placeholder v env, real hodnota jen v hlavicce na hostitelskem echo serveru; mismatch host -> 403 credential_endpoint_mismatch; nepovoleny host -> EACCES; docker i vm"
+  },
+  "gateway": {
+   "result": "pass",
+   "detail": "nginx bez IP mapy: provider s FAKE-SECRET v Authorization dorazil nginx->LiteLLM (401 'Received=FAKE****-123'), /key/generate 403; pkg proxy OK (tls: skip); docker i vm"
+  },
+  "compose": {
+   "result": "fail",
+   "detail": "0/15, zamerne: dockerd -> 'dockerd needs to be started with root privileges...'; uid 1000, CapEff=0, NoNewPrivs, unshare -Ur EPERM (docker i vm). Zdrojaky: root odmitnut validaci, CLONE_NEWUSER natvrdo v seccomp, zadny knob. Rootless nelze."
+  },
+  "isolation": {
+   "result": "pass",
+   "detail": "sandboxy bez sit. rozhrani, nevidi se, vlastni disk; host LAN/loopback/gateway porty blokovany; libkrun nezarucuje omezeni na bind mount (doc)"
+  },
+  "lifecycle": {
+   "result": "partial",
+   "detail": "stop/start OK, 3 paralelni OK; suspend/resume/snapshot nepodporovano v obou driverech; po davkovem mazani zustaly VM procesy (leak) - jednoduchy delete OK"
+  }
+ },
+ "cold_start_s": 1.7,
+ "ram_idle_mb": 140,
+ "compose_healthy": "0/15",
+ "needs_account": false,
+ "daemons": 1,
+ "verdict": "Policy a credential injection jsou silne a funguji na obou driverech, LiteLLM klic z provideru dorazi az do LiteLLM. Compose/dockerd se nespusti nikdy: root, capabilities a user namespaces jsou zamerne zakazane bez konfiguracni vyjimky.",
+ "cold_start_detail": {
+  "docker": 1.7,
+  "vm_rootfs_tar": 6.06,
+  "vm_cached_image_earlier_run": 2.24
+ }
+}

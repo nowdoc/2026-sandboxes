@@ -1,0 +1,21 @@
+{
+  "providers": {
+    "forgejo-local": {
+      "kind": "forgejo",
+      "url": "http://127.0.0.1:3000",
+      "user": "factory-bot",
+      "tokenEnv": "FORGEJO_BOT_TOKEN",
+      "adminTokenEnv": "FORGEJO_ADMIN_TOKEN",
+      "webhookSecretEnv": "WEBHOOK_SECRET"
+    }
+  },
+  "staging": {
+    "url": "http://127.0.0.1:3000",
+    "user": "factory-bot",
+    "tokenEnv": "FORGEJO_BOT_TOKEN",
+    "adminTokenEnv": "FORGEJO_ADMIN_TOKEN"
+  },
+  "projects": [
+    { "repo": "factory-admin/fixture", "provider": "forgejo-local" }
+  ]
+}

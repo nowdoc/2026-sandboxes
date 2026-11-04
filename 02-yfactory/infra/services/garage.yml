@@ -1,0 +1,13 @@
+services:
+  garage:
+    image: dxflrs/garage:v2.4.1
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    env_file: [secrets/garage.env]
+    environment: { GARAGE_CONFIG_FILE: /config/garage/garage.toml }
+    volumes:
+      - ./config:/config:ro
+      - ./data/garage:/var/lib/garage
+    ports: ["127.0.0.1:3900:3900"]
+    healthcheck: { test: ["CMD", "/garage", "status"], interval: 10s }
+    networks: [core]

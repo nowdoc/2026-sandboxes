@@ -1,0 +1,25 @@
+name: factory-orchestrator
+services:
+  orchestrator:
+    build: .
+    image: factory-orchestrator
+    container_name: factory-orchestrator
+    restart: unless-stopped
+    working_dir: ${FACTORY_ROOT:-/opt/factory}/orchestrator
+    entrypoint: ["sh", "entrypoint.sh"]
+    environment:
+      FACTORY_RUNTIME: ${FACTORY_RUNTIME:-gvisor}
+      FACTORY_BIND: ${FACTORY_BIND:-127.0.0.1}
+      FACTORY_HOME: ${FACTORY_HOME:-/home/sandbox}
+    # Drives Docker and KVM on the host; isolation adds nothing here because docker.sock is root on the host.
+    # Paths must match the host: adapters mount volumes from them, and sbx reads its login from the host user's home.
+    privileged: true
+    network_mode: host
+    pid: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${FACTORY_ROOT:-/opt/factory}:${FACTORY_ROOT:-/opt/factory}
+      - ${FACTORY_HOME:-/home/sandbox}:${FACTORY_HOME:-/home/sandbox}
+      - /usr/local/bin/sbx:/usr/local/bin/sbx:ro
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro

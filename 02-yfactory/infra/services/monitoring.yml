@@ -1,0 +1,69 @@
+services:
+  # Logs of every container, sent by the Docker daemon through the syslog driver (no Docker socket here), 30 days.
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.26.0
+    restart: unless-stopped
+    logging: { driver: local, options: { max-size: 10m, max-file: "5" } }
+    user: "1000:1000"
+    cap_drop: [ALL]
+    command: ["-storageDataPath=/data", "-retentionPeriod=30d", "-syslog.listenAddr.udp=:5140", "-loggerLevel=WARN"]
+    volumes: [./data/victorialogs:/data]
+    ports: ["127.0.0.1:5140:5140/udp"]
+    healthcheck: { test: ["CMD", "wget", "-qO/dev/null", "http://127.0.0.1:9428/health"], interval: 10s }
+    networks: [monitoring]
+
+  # Metrics of the services that expose them, scraped by itself, 90 days.
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.122.0
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    user: "1000:1000"
+    cap_drop: [ALL]
+    command: ["-storageDataPath=/data", "-retentionPeriod=90d", "-promscrape.config=/config/victoriametrics/scrape.yml", "-loggerLevel=WARN"]
+    volumes: [./config:/config:ro, ./data/victoriametrics:/data]
+    healthcheck: { test: ["CMD", "wget", "-qO/dev/null", "http://127.0.0.1:8428/health"], interval: 10s }
+    # control: to scrape sandbox, which is not on core.
+    networks: [monitoring, core, control]
+
+  # Per-container CPU, memory and start time from the cgroup tree alone, so it needs only /sys/fs/cgroup read-only. Containers
+  # appear by cgroup id, not by name, and without network or disk metrics: naming them needs docker.sock (root on the host),
+  # and its Docker handler fails anyway, because Docker 29 with the containerd snapshotter has no
+  # /var/lib/docker/image/overlayfs. Leaving docker.sock and /var/lib/docker out is the trade-off.
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.53.0
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    user: "1000:1000"
+    cap_drop: [ALL]
+    # The host cgroup namespace, otherwise it sees only its own cgroup.
+    cgroup: host
+    command:
+      - --docker_only=false
+      - --raw_cgroup_prefix_whitelist=/system.slice/docker-
+      - --housekeeping_interval=30s
+      - --store_container_labels=false
+      - --disable_metrics=disk,diskIO,network,percpu,sched,process,hugetlb,referenced_memory,cpu_topology,resctrl,advtcp,tcp,udp,memory_numa
+      - --logtostderr
+    volumes: [/sys/fs/cgroup:/sys/fs/cgroup:ro]
+    healthcheck: { test: ["CMD", "wget", "-qO/dev/null", "http://127.0.0.1:8080/healthz"], interval: 10s }
+    networks: [monitoring]
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    env_file: [secrets/grafana.env]
+    environment:
+      GF_PATHS_PROVISIONING: /config/grafana/provisioning
+      GF_PLUGINS_PREINSTALL: victoriametrics-logs-datasource
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_VIEWERS_CAN_EDIT: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes: [./config:/config:ro, ./data/grafana:/var/lib/grafana]
+    ports: ["${YF_BIND}:8091:3000"]
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"], interval: 10s }
+    depends_on: [victorialogs, victoriametrics]
+    networks: [monitoring]

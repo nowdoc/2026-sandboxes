@@ -1,0 +1,15 @@
+{"runtime":"sbx","version":"v0.50.1","status":"partial","kvm_used":true,
+"tests":{
+"install":{"result":"partial","detail":"tarball/apt, 1 demon + shim na VM; proprietarni licence; vyzaduje Docker ucet (login) a skupinu kvm"},
+"headless":{"result":"partial","detail":"vse bez TTY pres sg kvm; template save u bezici VM chce TTY (--force neexistuje), exec -d nepodporovan; login ucet nutny"},
+"adapter":{"result":"pass","detail":"orchestrator/adapters/sbx.py create/exec/destroy overen; tar/stdin pres sbx exec -i funguje"},
+"cold_start":{"result":"pass","detail":"median 14.0 s (11.8-15.8)"},
+"egress":{"result":"pass","detail":"default-deny, probe: 1.1.1.1, DNS, metadata, LAN, host:22 blokovano (TCP connect prijat transparentnim proxy, data ne); allow per sandbox/domena/IP"},
+"credentials":{"result":"pass","detail":"set-custom: placeholder -> FAKE-SECRET v hlavickach na libovolny host (IP), v sandboxu necitelne; na jiny host zustal placeholder; lokalne jen hlavicky, ne telo/URL; HTTPS custom nezkouseno"},
+"gateway":{"result":"partial","detail":"llm-gw dosazitelna po allow; zdrojova IP = host pro vsechny sandboxy, tj. IP->klic mapovani nefunguje; identita pres per-sandbox secret/hlavicku nebo policy log; pkg-gw reseno allow domen v sbx; e2e s LiteLLM neoverena"},
+"compose":{"result":"pass","detail":"15/15 healthy za 19 s, nslookup OK, bez privileged"},
+"isolation":{"result":"pass","detail":"samostatna VM a rootfs, mezi sandboxy a na hosta jen pres proxy policy; workspace se stejnou cestou je sdileny rw virtiofs"},
+"lifecycle":{"result":"pass","detail":"rm uklidi vse; stop/start retains FS; template save+create -t snapshot funguje; pause/resume neni; 2-3 paralelni OK"},
+"docker_traffic":{"result":"untested","detail":"objem provozu na Docker nezmeren (chybi tcpdump); SBX_NO_TELEMETRY=1 create/exec funguje"}},
+"cold_start_s":14.0,"ram_idle_mb":1150,"compose_healthy":"15/15","needs_account":true,"daemons":1,
+"verdict":"Technicky nejpropracovanejsi: mikroVM, host-side proxy s default-deny, set-custom tajemstvi pro libovolny host a compose bez privileged vse fungovalo. Proti PoC hraje povinny Docker ucet/login, proprietarni licence a to, ze gateway nemuze rozlisovat ulohy podle zdrojove IP."}

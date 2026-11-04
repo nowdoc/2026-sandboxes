@@ -1,0 +1,21 @@
+# Provider je v litellm/.env (OPENAI_API_URL, OPENAI_API_KEY). Po zmene: docker compose up -d --force-recreate litellm
+# Modely GLM nemaji v LiteLLM cenu, spend zustava 0 a max_budget je nevynuti. Doplnit input/output_cost_per_token.
+model_list:
+  - model_name: mock
+    litellm_params:
+      model: openai/mock
+      api_key: not-used
+      mock_response: "factory mock response"
+  - model_name: GLM-5.3-Flash
+    litellm_params:
+      model: openai/GLM-5.3-Flash
+      api_base: os.environ/OPENAI_API_URL
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: GLM-5.3
+    litellm_params:
+      model: openai/GLM-5.3
+      api_base: os.environ/OPENAI_API_URL
+      api_key: os.environ/OPENAI_API_KEY
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

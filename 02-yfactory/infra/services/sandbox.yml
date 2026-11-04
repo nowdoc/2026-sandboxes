@@ -1,0 +1,26 @@
+services:
+  # Runs the microVMs. No credentials, not on the core network: VM egress leaves from here.
+  sandbox:
+    image: ynfra/yfactory:sandbox-${YF_VERSION}
+    container_name: sandbox
+    restart: unless-stopped
+    logging: { driver: syslog, options: { syslog-address: "udp://127.0.0.1:5140", syslog-format: rfc5424micro, tag: "{{.Name}}" } }
+    user: "1000:1000"
+    group_add: ["${KVM_GID}"]
+    devices: [/dev/kvm]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    env_file: [secrets/sandbox.env]
+    environment:
+      YF_VM_VERSION: ${YF_VM_VERSION}
+      MSB_HOME: /data/msb
+    # The server listens only after the images are loaded; /health then checks that msb answers.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:7000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 5s
+      start_period: 600s
+    volumes:
+      - ./data/sandbox:/data
+      - ./data/images:/images:ro
+    # egress: the default route msb networking needs.
+    networks: { control: {}, egress: {}, vms: { ipv4_address: 10.99.0.3 } }

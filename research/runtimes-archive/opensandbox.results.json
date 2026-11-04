@@ -1,0 +1,62 @@
+{
+ "runtime": "opensandbox",
+ "version": "opensandbox-server (uv tool, latest 2026-11) / egress v1.1.7 / execd v1.1.0 / python SDK 1.2.0",
+ "status": "partial",
+ "kvm_used": false,
+ "tests": {
+  "install": {
+   "result": "pass",
+   "detail": "uv + uv tool install opensandbox-server, Apache-2.0, bez uctu; 1 python server (~174 MB) + sidecar kontejner per sandbox; vyzaduje api_key a pristup k dockeru"
+  },
+  "headless": {
+   "result": "pass",
+   "detail": "REST/SDK bez TTY, server pod rootem pres sudo"
+  },
+  "adapter": {
+   "result": "partial",
+   "detail": "orchestrator/adapters/opensandbox.py funguje (rc, stderr, tar pres stdin = zapis pres files API + shell redirect); stdout jen jako textove radky, ne binarne; gateway pres per-task socat relay"
+  },
+  "cold_start": {
+   "result": "pass",
+   "detail": "create+prvni exec 3.7/3.73/3.75 s, median 3.73 s (s egress sidecarem a relayem); bez policy ~1-2 s; jednorazove 30 s stall"
+  },
+  "egress": {
+   "result": "partial",
+   "detail": "dns+nft: probe 14/14 blocked po workaroundech; defaultne ale nameserver z resolv.conf (LAN router) dosazitelny na vsech portech, IP-only policy nefiltruje DNS, pripojeni sidecaru do dalsi site obejde DNS filtr; gVisor + policy odmitnut serverem"
+  },
+  "credentials": {
+   "result": "pass",
+   "detail": "Credential Vault dns+nft e2e: FAKE-SECRET vlozen do hlavicky (HTTP i HTTPS) a substituce placeholderu v header/body; v sandboxu neni v env/proc/fs; placeholder na nevazany host neprojde substituovan; hosts musi byt FQDN"
+  },
+  "gateway": {
+   "result": "partial",
+   "detail": "LLM gw a squid dosazitelne pres relay (bridge je izolovan od factory-core); 403 unknown sandbox protoze map.conf neobsahuje IP relaye; identita = IP per-task relaye; /key/* 403"
+  },
+  "compose": {
+   "result": "fail",
+   "detail": "0/15: Docker backend nema privileged/cap_add; runc: iptables Permission denied; gVisor runsc-dind: netfilter tabulky i bridge netlink nedostupne"
+  },
+  "isolation": {
+   "result": "pass",
+   "detail": "3 sandboxy: vlastni /tmp, s policy se po siti nevidi ani nedosahnou hostitele; bez policy vidi sebe, hostitele (SSH), LAN a internet"
+  },
+  "lifecycle": {
+   "result": "partial",
+   "detail": "destroy uklidi vse; pause/resume funguje (0.05/0.07 s, stav prezije); snapshot na Docker 29 selhal (docker commit 404); 3 paralelni OK (4.4 s); vault je v pameti sidecaru"
+  },
+  "gvisor": {
+   "result": "fail",
+   "detail": "server odmitne networkPolicy s gVisorem; bez policy bezi (runsc, 200 na internet, otevreny)"
+  },
+  "kata_firecracker": {
+   "result": "untested",
+   "detail": "cteno: Firecracker jen pres Kubernetes Fast Sandbox, Kata vyzaduje registraci v daemon.json; nenainstalovano"
+  }
+ },
+ "cold_start_s": 3.73,
+ "ram_idle_mb": 16,
+ "compose_healthy": 0,
+ "needs_account": false,
+ "daemons": 1,
+ "verdict": "Credential Vault s dns+nft funguje end-to-end a secret v sandboxu neni, ale egress ma nebezpecne defaulty (LAN nameserver otevreny, IP-only policy bez DNS filtru) a vyzaduje workaroundy, gateway jde jen pres relay. Docker Compose uvnitr nejde (zadny privileged, gVisor bez netfilter/bridge) a gVisor nejde s egress, takze pro nase PoC je to pouzitelne jen jako vault+egress vrstva bez compose."
+}

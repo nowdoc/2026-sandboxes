@@ -1,0 +1,381 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yfactory.invalid/schema/actions.schema.json",
+  "title": "yfactory task API: sandbox actions",
+  "description": "What a sandbox (VM) may tell the orchestrator. The sandbox only proposes; the orchestrator decides, validates, stages and publishes. Transport: POST /yf/actions on the task API (:9001) with the run token. Response: ActionResult. Orchestrator to sandbox messages: GET /yf/events (Event). Run input and allowed actions: GET /yf/context (Context).",
+  "$defs": {
+    "ActionId": {
+      "description": "Client generated idempotency key, unique within the run. A repeated id returns the first result with status duplicate.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{8,64}$"
+    },
+    "Markdown": {
+      "description": "Untrusted text. The orchestrator strips images, external links, @mentions and secrets before publishing.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "Path": {
+      "description": "Repository relative path, no leading slash, no '..'.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$)).+$"
+    },
+    "Sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "Domain": {
+      "type": "string",
+      "maxLength": 253,
+      "pattern": "^(\\*\\.)?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+    },
+    "EnvVars": {
+      "description": "Variables to add or change. Names must not start with LLM_, TASK_, GIT_, YF_ or OPENCODE_; never secrets.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$" },
+      "additionalProperties": { "type": "string", "maxLength": 4096 },
+      "maxProperties": 64
+    },
+
+    "Action": {
+      "description": "Envelope. `type` selects the payload schema.",
+      "type": "object",
+      "required": ["id", "type", "payload"],
+      "properties": {
+        "id": { "$ref": "#/$defs/ActionId" },
+        "type": { "$ref": "#/$defs/ActionType" },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        { "properties": { "type": { "const": "comment" }, "payload": { "$ref": "#/$defs/Comment" } } },
+        { "properties": { "type": { "const": "review_comment" }, "payload": { "$ref": "#/$defs/ReviewComment" } } },
+        { "properties": { "type": { "const": "review_submit" }, "payload": { "$ref": "#/$defs/ReviewSubmit" } } },
+        { "properties": { "type": { "const": "thread_resolve" }, "payload": { "$ref": "#/$defs/ThreadResolve" } } },
+        { "properties": { "type": { "const": "progress" }, "payload": { "$ref": "#/$defs/Progress" } } },
+        { "properties": { "type": { "const": "artifact" }, "payload": { "$ref": "#/$defs/Artifact" } } },
+        { "properties": { "type": { "const": "finish" }, "payload": { "$ref": "#/$defs/Finish" } } },
+        { "properties": { "type": { "const": "question" }, "payload": { "$ref": "#/$defs/Question" } } },
+        { "properties": { "type": { "const": "fetch_context" }, "payload": { "$ref": "#/$defs/FetchContext" } } },
+        { "properties": { "type": { "const": "request_domain" }, "payload": { "$ref": "#/$defs/RequestDomain" } } },
+        { "properties": { "type": { "const": "propose_environment" }, "payload": { "$ref": "#/$defs/ProposeEnvironment" } } },
+        { "properties": { "type": { "const": "propose_followup" }, "payload": { "$ref": "#/$defs/ProposeFollowup" } } }
+      ]
+    },
+
+    "ActionType": {
+      "enum": [
+        "comment", "review_comment", "review_submit", "thread_resolve",
+        "progress", "artifact", "finish",
+        "question", "fetch_context", "request_domain", "propose_environment", "propose_followup"
+      ]
+    },
+
+    "Comment": {
+      "description": "A general comment, or a reply when in_reply_to is set. Published by the orchestrator under the bot identity; may stay pending until a person approves (orchestrator policy, not part of the payload).",
+      "type": "object",
+      "required": ["target", "body"],
+      "properties": {
+        "target": { "enum": ["pull_request", "ticket"] },
+        "body": { "$ref": "#/$defs/Markdown" },
+        "in_reply_to": { "type": "string", "maxLength": 128, "description": "Thread id from Context or an Event." }
+      },
+      "additionalProperties": false
+    },
+
+    "ReviewComment": {
+      "description": "Inline finding on the diff. Staged in the orchestrator until review_submit. Rejected with invalid_anchor when the line is not part of the diff.",
+      "type": "object",
+      "required": ["path", "line", "severity", "category", "body"],
+      "properties": {
+        "path": { "$ref": "#/$defs/Path" },
+        "line": { "type": "integer", "minimum": 1 },
+        "start_line": { "type": "integer", "minimum": 1, "description": "First line of a multi-line range; must be <= line." },
+        "side": { "enum": ["RIGHT", "LEFT"], "default": "RIGHT", "description": "RIGHT = new file, LEFT = old file." },
+        "commit_sha": { "$ref": "#/$defs/Sha", "description": "Defaults to the PR head of the run." },
+        "severity": { "enum": ["blocker", "major", "minor", "nit", "praise"] },
+        "category": { "enum": ["bug", "security", "correctness", "performance", "test", "design", "style", "docs", "other"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "body": { "$ref": "#/$defs/Markdown" },
+        "suggestion": { "type": "string", "maxLength": 10000, "description": "Replacement for lines start_line..line; rendered as a suggestion block." }
+      },
+      "additionalProperties": false
+    },
+
+    "ReviewSubmit": {
+      "description": "Commit point of a review run: staged review_comment items and this summary are published as one review. Allowed once per run.",
+      "type": "object",
+      "required": ["verdict", "summary"],
+      "properties": {
+        "verdict": { "enum": ["approve", "request_changes", "comment"] },
+        "summary": { "$ref": "#/$defs/Markdown" }
+      },
+      "additionalProperties": false
+    },
+
+    "ThreadResolve": {
+      "description": "Proposes that a review thread is closed, for example after a revise run fixed it.",
+      "type": "object",
+      "required": ["thread_id", "resolution"],
+      "properties": {
+        "thread_id": { "type": "string", "maxLength": 128 },
+        "resolution": { "enum": ["addressed", "not_applicable", "wont_fix"] },
+        "commit_sha": { "$ref": "#/$defs/Sha" },
+        "note": { "type": "string", "maxLength": 2000 }
+      },
+      "additionalProperties": false
+    },
+
+    "Progress": {
+      "description": "Status for the UI. No effect on any external system.",
+      "type": "object",
+      "required": ["phase", "message"],
+      "properties": {
+        "phase": { "enum": ["setup", "analyzing", "implementing", "testing", "reviewing", "summarizing"] },
+        "message": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "percent": { "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+
+    "Artifact": {
+      "description": "A named result that is kept with the run (test report, log excerpt, generated file). Inline up to 256 KiB, or a path in the VM that the orchestrator pulls (up to 10 MiB).",
+      "type": "object",
+      "required": ["name", "media_type"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,100}$" },
+        "media_type": { "type": "string", "maxLength": 100, "pattern": "^[a-z]+/[a-z0-9.+-]+$" },
+        "description": { "type": "string", "maxLength": 500 },
+        "encoding": { "enum": ["utf8", "base64"], "default": "utf8" },
+        "content": { "type": "string", "maxLength": 349526 },
+        "vm_path": { "type": "string", "pattern": "^/(workspace|work/out)/.+", "maxLength": 1024 }
+      },
+      "oneOf": [{ "required": ["content"] }, { "required": ["vm_path"] }],
+      "additionalProperties": false
+    },
+
+    "Finish": {
+      "description": "End of the run from the agent's side. The orchestrator then runs its own checks (commits, tests) and publishes. Without finish the run ends when the agent process exits, with outcome unknown.",
+      "type": "object",
+      "required": ["outcome", "summary"],
+      "properties": {
+        "outcome": { "enum": ["done", "nothing_to_do", "blocked", "failed"] },
+        "summary": { "$ref": "#/$defs/Markdown" },
+        "pull_request": {
+          "description": "Proposed PR text for implement and revise runs.",
+          "type": "object",
+          "required": ["title", "body"],
+          "properties": {
+            "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "body": { "$ref": "#/$defs/Markdown" }
+          },
+          "additionalProperties": false
+        },
+        "blocked_on": { "type": "string", "maxLength": 1000, "description": "For outcome blocked: what is missing." }
+      },
+      "additionalProperties": false
+    },
+
+    "Question": {
+      "description": "Asks a person. The answer arrives as an Event of type answer. With blocking true the agent is expected to wait for it.",
+      "type": "object",
+      "required": ["question"],
+      "properties": {
+        "question": { "$ref": "#/$defs/Markdown" },
+        "options": {
+          "type": "array", "minItems": 2, "maxItems": 8,
+          "items": {
+            "type": "object", "required": ["id", "label"],
+            "properties": { "id": { "type": "string", "maxLength": 64 }, "label": { "type": "string", "maxLength": 200 } },
+            "additionalProperties": false
+          }
+        },
+        "blocking": { "type": "boolean", "default": true },
+        "timeout_s": { "type": "integer", "minimum": 60, "maximum": 86400, "default": 3600 }
+      },
+      "additionalProperties": false
+    },
+
+    "FetchContext": {
+      "description": "Read-only query. The data comes back in ActionResult.result, already sanitized and capped. The VM has no forge or Slack credentials; the orchestrator reads on its behalf.",
+      "type": "object",
+      "required": ["what"],
+      "properties": {
+        "what": { "enum": ["pull_request", "comments", "ci_status", "ticket", "file_at_ref", "slack_thread"] },
+        "ref": { "type": "string", "maxLength": 256, "description": "pull_request/ticket: id; slack_thread: permalink or ts; file_at_ref: git ref." },
+        "path": { "$ref": "#/$defs/Path", "description": "Only for file_at_ref." },
+        "since": { "type": "string", "maxLength": 64, "description": "comments: event seq or ISO time; only newer items." }
+      },
+      "additionalProperties": false
+    },
+
+    "RequestDomain": {
+      "description": "Asks for domains to be added to the egress allowlist of this run. Resolved by a person or policy; status pending until then.",
+      "type": "object",
+      "required": ["domains", "reason"],
+      "properties": {
+        "domains": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "$ref": "#/$defs/Domain" } },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      },
+      "additionalProperties": false
+    },
+
+    "ProposeEnvironment": {
+      "description": "Replaces the file /workspace/.yf-proposal.json of the inspect run. A person applies it; it can carry a prompt injection.",
+      "type": "object",
+      "required": ["summary", "repository", "environment", "allowlist"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1, "maxLength": 8000 },
+        "repository": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object", "required": ["setup", "env"],
+              "properties": { "setup": { "type": "string", "maxLength": 65536 }, "env": { "$ref": "#/$defs/EnvVars" } },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "environment": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object", "required": ["setup", "maintenance", "env"],
+              "properties": {
+                "setup": { "type": "string", "maxLength": 65536 },
+                "maintenance": { "type": "string", "maxLength": 65536 },
+                "env": { "$ref": "#/$defs/EnvVars" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "allowlist": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/Domain" } }
+      },
+      "additionalProperties": false
+    },
+
+    "ProposeFollowup": {
+      "description": "Something found that is out of scope of this run. Becomes a suggested ticket, never created automatically.",
+      "type": "object",
+      "required": ["title", "body", "kind"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "body": { "$ref": "#/$defs/Markdown" },
+        "kind": { "enum": ["bug", "tech_debt", "test", "docs", "security", "other"] },
+        "path": { "$ref": "#/$defs/Path" }
+      },
+      "additionalProperties": false
+    },
+
+    "ActionResult": {
+      "description": "Response to POST /yf/actions. HTTP 200 for every processed action, including rejected ones, so the agent can read the reason and fix the action in the same session. HTTP 400/401/413/429 only for a broken envelope, a bad token, an oversized body or flooding.",
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/ActionId" },
+        "status": {
+          "enum": ["accepted", "pending", "rejected", "duplicate"],
+          "description": "accepted: staged or done. pending: waits for a person or policy, the outcome comes as an Event action_result. rejected: see code. duplicate: id seen before, `result` repeats the first answer."
+        },
+        "code": {
+          "enum": ["invalid_payload", "not_allowed_for_kind", "invalid_anchor", "limit_exceeded", "already_submitted", "not_found", "conflict", "expired"]
+        },
+        "message": { "type": "string", "maxLength": 500 },
+        "result": { "type": "object", "description": "fetch_context data, or the first result for duplicate." }
+      },
+      "allOf": [{ "if": { "properties": { "status": { "const": "rejected" } } }, "then": { "required": ["code", "message"] } }],
+      "additionalProperties": false
+    },
+
+    "Event": {
+      "description": "Orchestrator to sandbox, from GET /yf/events?after=<seq>&wait=<s> (long poll, up to 30 s). seq is monotonic within the run. Human authored text is untrusted and marked so.",
+      "type": "object",
+      "required": ["seq", "type"],
+      "properties": { "seq": { "type": "integer", "minimum": 1 }, "type": { "enum": ["action_result", "answer", "comment", "head_changed", "cancel"] } },
+      "oneOf": [
+        {
+          "properties": { "type": { "const": "action_result" }, "action_id": { "$ref": "#/$defs/ActionId" }, "status": { "enum": ["accepted", "rejected"] }, "message": { "type": "string", "maxLength": 500 } },
+          "required": ["action_id", "status"]
+        },
+        {
+          "properties": { "type": { "const": "answer" }, "question_id": { "$ref": "#/$defs/ActionId" }, "option_id": { "type": "string", "maxLength": 64 }, "text": { "type": "string", "maxLength": 5000 }, "untrusted": { "const": true } },
+          "required": ["question_id", "untrusted"]
+        },
+        {
+          "properties": {
+            "type": { "const": "comment" }, "untrusted": { "const": true },
+            "thread_id": { "type": "string", "maxLength": 128 }, "author": { "type": "string", "maxLength": 128 },
+            "body": { "type": "string", "maxLength": 20000 },
+            "path": { "$ref": "#/$defs/Path" }, "line": { "type": "integer", "minimum": 1 }, "url": { "type": "string", "maxLength": 500 }
+          },
+          "required": ["thread_id", "author", "body", "untrusted"]
+        },
+        { "properties": { "type": { "const": "head_changed" }, "head_sha": { "$ref": "#/$defs/Sha" } }, "required": ["head_sha"] },
+        { "properties": { "type": { "const": "cancel" }, "reason": { "type": "string", "maxLength": 500 } } }
+      ]
+    },
+
+    "Context": {
+      "description": "GET /yf/context. What the run is, what it may do, and its limits. The agent reads it once at the start and may re-read it.",
+      "type": "object",
+      "required": ["run", "capabilities", "limits"],
+      "properties": {
+        "run": {
+          "type": "object", "required": ["id", "kind", "repo"],
+          "properties": {
+            "id": { "type": "string" },
+            "kind": { "enum": ["implement", "review", "revise", "inspect", "verify"] },
+            "repo": { "type": "string" },
+            "base_sha": { "$ref": "#/$defs/Sha" },
+            "head_sha": { "$ref": "#/$defs/Sha" }
+          },
+          "additionalProperties": false
+        },
+        "input": {
+          "description": "Untrusted. ticket for implement, pull_request for review and revise.",
+          "type": "object",
+          "properties": {
+            "ticket": {
+              "type": "object", "required": ["id", "title", "body"],
+              "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "body": { "type": "string" }, "url": { "type": "string" } }
+            },
+            "pull_request": {
+              "type": "object", "required": ["id", "title", "body", "base_ref", "head_ref"],
+              "properties": {
+                "id": { "type": "string" }, "title": { "type": "string" }, "body": { "type": "string" }, "author": { "type": "string" }, "url": { "type": "string" },
+                "base_ref": { "type": "string" }, "head_ref": { "type": "string" },
+                "changed_files": { "type": "array", "items": { "$ref": "#/$defs/Path" } },
+                "threads": {
+                  "type": "array",
+                  "items": {
+                    "type": "object", "required": ["thread_id", "resolved", "comments"],
+                    "properties": {
+                      "thread_id": { "type": "string" }, "resolved": { "type": "boolean" },
+                      "path": { "$ref": "#/$defs/Path" }, "line": { "type": "integer" },
+                      "comments": { "type": "array", "items": { "type": "object", "required": ["author", "body"], "properties": { "author": { "type": "string" }, "body": { "type": "string" } } } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/ActionType" }, "description": "Action types this run may send; anything else is rejected with not_allowed_for_kind." },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "max_actions": { "type": "integer" },
+            "max_review_comments": { "type": "integer" },
+            "max_body_chars": { "type": "integer" },
+            "max_artifact_bytes": { "type": "integer" }
+          },
+          "additionalProperties": { "type": "integer" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/Action" }
+  ]
+}

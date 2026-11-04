@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 512" width="1160" height="512" role="img" aria-label="Run lifecycle: steps 1 to 3 and 7 to 9 run in the trusted orchestrator, steps 4 to 6 inside the untrusted microVM">
+<style>svg{font-family:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.bg{fill:#ffffff}
+.t{fill:#1f2328;font-size:13px;font-weight:600}
+.s{fill:#59636e;font-size:11px}
+.zl{fill:#59636e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+.card{fill:#ffffff;stroke:#d1d9e0;stroke-width:1}
+.ext{fill:#ffffff;stroke:#8c959f;stroke-width:1;stroke-dasharray:4 3}
+.z-host{fill:#f6f8fa;stroke:#d1d9e0}
+.z-ctr{fill:#ffffff;stroke:#8c959f}
+.z-yf{fill:#eefbf1;stroke:#7fd897}
+.z-vm{fill:#f8f0ff;stroke:#c9a3ff}
+.z-sb{fill:#fff8dc;stroke:#e3b341}
+.z-core{fill:#eef6ff;stroke:#80bfff}
+.ln{fill:none;stroke:#6e7781;stroke-width:1.5}
+.vm{fill:none;stroke:#bf8700;stroke-width:1.75}
+.you{fill:none;stroke:#8250df;stroke-width:1.5;stroke-dasharray:5 4}
+.ah{fill:#6e7781}.ah-vm{fill:#bf8700}.ah-you{fill:#8250df}
+.lbl{fill:#57606a;font-size:11px}
+.lbl-vm{fill:#9a6700;font-size:11px;font-weight:600}
+.lbl-you{fill:#8250df;font-size:11px;font-weight:600}
+.n{fill:#ffffff;font-size:11px;font-weight:700}
+.nb{fill:#1f2328}
+.bnd{stroke:#cf222e;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+.lbl-bnd{fill:#cf222e;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0d1117}
+.t{fill:#e6edf3}.s,.zl{fill:#9198a1}
+.card{fill:#161b22;stroke:#3d444d}
+.ext{fill:#0d1117;stroke:#656c76}
+.z-host{fill:#11161d;stroke:#30363d}
+.z-ctr{fill:#161b22;stroke:#656c76}
+.z-yf{fill:#0f2a19;stroke:#2f7d45}
+.z-vm{fill:#24173a;stroke:#7a52c7}
+.z-sb{fill:#2a2108;stroke:#9e6a03}
+.z-core{fill:#0c2340;stroke:#1f6feb}
+.ln{stroke:#8b949e}.ah{fill:#8b949e}
+.vm{stroke:#e3b341}.ah-vm{fill:#e3b341}.lbl-vm{fill:#e3b341}
+.you{stroke:#bc8cff}.ah-you{fill:#bc8cff}.lbl-you{fill:#bc8cff}
+.lbl{fill:#9198a1}
+.nb{fill:#e6edf3}.n{fill:#0d1117}
+.bnd{stroke:#f85149}.lbl-bnd{fill:#f85149}
+}
+</style>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+<marker id="av" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-vm"/></marker>
+<marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-you"/></marker>
+</defs>
+<rect class="bg" width="1160" height="512" rx="16"/>
+<rect class="z-yf" x="20" y="30" width="1120" height="180" rx="12"/>
+<text class="zl" x="34" y="50">ORCHESTRATOR</text>
+<text class="s" x="34" y="64">trusted · holds every credential</text>
+<rect class="z-vm" x="20" y="270" width="1120" height="160" rx="12"/>
+<text class="zl" x="34" y="290">MICROVM</text>
+<text class="s" x="34" y="304">untrusted · default-deny</text>
+<line class="bnd" x1="20" y1="240" x2="1140" y2="240"/>
+<text class="lbl-bnd" x="1126" y="234" text-anchor="end">TRUST BOUNDARY</text>
+<rect class="card" x="40" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="96.0" y="126.0" text-anchor="middle">Admit</text>
+<text class="s" x="96.0" y="142.0" text-anchor="middle">repos.json</text>
+<text class="s" x="96.0" y="156.0" text-anchor="middle">push access</text>
+<circle class="nb" cx="55" cy="103" r="9"/>
+<text class="n" x="55" y="107" text-anchor="middle">1</text>
+<rect class="card" x="162" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="218.0" y="126.0" text-anchor="middle">Mirror</text>
+<text class="s" x="218.0" y="142.0" text-anchor="middle">git fetch</text>
+<text class="s" x="218.0" y="156.0" text-anchor="middle">run repo + hook</text>
+<circle class="nb" cx="177" cy="103" r="9"/>
+<text class="n" x="177" y="107" text-anchor="middle">2</text>
+<rect class="card" x="284" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="340.0" y="126.0" text-anchor="middle">Sandbox</text>
+<text class="s" x="340.0" y="142.0" text-anchor="middle">msb create</text>
+<text class="s" x="340.0" y="156.0" text-anchor="middle">key + run token</text>
+<circle class="nb" cx="299" cy="103" r="9"/>
+<text class="n" x="299" y="107" text-anchor="middle">3</text>
+<rect class="card" x="406" y="306" width="112" height="96" rx="8"/>
+<text class="t" x="462.0" y="344.0" text-anchor="middle">Clone + setup</text>
+<text class="s" x="462.0" y="360.0" text-anchor="middle">via task API :9001</text>
+<text class="s" x="462.0" y="374.0" text-anchor="middle">setup script, root</text>
+<circle class="nb" cx="421" cy="321" r="9"/>
+<text class="n" x="421" y="325" text-anchor="middle">4</text>
+<rect class="card" x="528" y="306" width="112" height="96" rx="8"/>
+<text class="t" x="584.0" y="344.0" text-anchor="middle">Agent</text>
+<text class="s" x="584.0" y="360.0" text-anchor="middle">opencode run</text>
+<text class="s" x="584.0" y="374.0" text-anchor="middle">LLM via :9001</text>
+<circle class="nb" cx="543" cy="321" r="9"/>
+<text class="n" x="543" y="325" text-anchor="middle">5</text>
+<rect class="card" x="650" y="306" width="112" height="96" rx="8"/>
+<text class="t" x="706.0" y="344.0" text-anchor="middle">Push</text>
+<text class="s" x="706.0" y="360.0" text-anchor="middle">commit</text>
+<text class="s" x="706.0" y="374.0" text-anchor="middle">yfactory/&lt;id&gt; only</text>
+<circle class="nb" cx="665" cy="321" r="9"/>
+<text class="n" x="665" y="325" text-anchor="middle">6</text>
+<rect class="card" x="772" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="828.0" y="126.0" text-anchor="middle">Gate</text>
+<text class="s" x="828.0" y="142.0" text-anchor="middle">every commit</text>
+<text class="s" x="828.0" y="156.0" text-anchor="middle">no CI, .git*, links</text>
+<circle class="nb" cx="787" cy="103" r="9"/>
+<text class="n" x="787" y="107" text-anchor="middle">7</text>
+<rect class="card" x="894" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="950.0" y="126.0" text-anchor="middle">Publish</text>
+<text class="s" x="950.0" y="142.0" text-anchor="middle">push with lease</text>
+<text class="s" x="950.0" y="156.0" text-anchor="middle">open PR</text>
+<circle class="nb" cx="909" cy="103" r="9"/>
+<text class="n" x="909" y="107" text-anchor="middle">8</text>
+<rect class="card" x="1016" y="88" width="112" height="96" rx="8"/>
+<text class="t" x="1072.0" y="126.0" text-anchor="middle">Archive</text>
+<text class="s" x="1072.0" y="142.0" text-anchor="middle">sessions to S3</text>
+<text class="s" x="1072.0" y="156.0" text-anchor="middle">revoke key, msb rm</text>
+<circle class="nb" cx="1031" cy="103" r="9"/>
+<text class="n" x="1031" y="107" text-anchor="middle">9</text>
+<path class="ln" d="M152,136.0 H162" marker-end="url(#a)"/>
+<path class="ln" d="M274,136.0 H284" marker-end="url(#a)"/>
+<path class="ln" d="M340.0,184 V250 H462.0 V306" marker-end="url(#a)"/>
+<text class="lbl" x="401.0" y="230" text-anchor="middle">env via stdin</text>
+<path class="vm" d="M518,354.0 H528" marker-end="url(#av)"/>
+<path class="vm" d="M640,354.0 H650" marker-end="url(#av)"/>
+<path class="vm" d="M706.0,306 V250 H828.0 V184" marker-end="url(#av)"/>
+<text class="lbl-vm" x="767.0" y="264" text-anchor="middle">git push</text>
+<path class="ln" d="M884,136.0 H894" marker-end="url(#a)"/>
+<path class="ln" d="M1006,136.0 H1016" marker-end="url(#a)"/>
+<rect class="card" x="20" y="452" width="1120" height="40" rx="20"/>
+<text class="lbl-you" x="42" y="476" text-anchor="start">keep or empty prompt</text>
+<text class="lbl" x="190" y="476" text-anchor="start">VM stays ready after step 3  ·  make shell: opencode and git push  ·  make publish: steps 7–8  ·  make rm: step 9</text>
+</svg>
+

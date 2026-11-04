@@ -1,0 +1,26 @@
+name: factory-gateway
+services:
+  llm:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    container_name: factory-llm-gw
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    # Jen pro runtimes mimo Docker sit (sbx, e2b). Adresa je alias na lo (up.sh), ne LAN ani 0.0.0.0.
+    ports:
+      - "198.18.0.10:4000:4000"
+      - "198.18.0.10:4001:4001"
+    networks: [factory-core]
+  packages:
+    image: ubuntu/squid:6.10-24.10_beta
+    restart: unless-stopped
+    container_name: factory-pkg-gw
+    ports:
+      - "198.18.0.10:3128:3128"
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+      - ./allowlist.txt:/etc/squid/allowlist.txt:ro
+    networks: [factory-core]
+networks:
+  factory-core:
+    external: true

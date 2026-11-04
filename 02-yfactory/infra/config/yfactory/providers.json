@@ -1,0 +1,7 @@
+{
+  "example": {
+    "kind": "github",
+    "url": "https://github.com",
+    "tokenEnv": "GITHUB_TOKEN_EXAMPLE"
+  }
+}

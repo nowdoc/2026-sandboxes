@@ -41,6 +41,9 @@ VM images have separate `vm-vN` tags and are rebuilt when `vm/` changes.
 
 ## Tests
 
+Run from `02-yfactory/` with Node.js 24, Git, Bash and curl installed on the host.
+The unit and integration tests use local stubs; no deployment is needed.
+
 ```bash
 node --test tests/actions.test.ts tests/review_e2e.test.ts
 node tests/security.ts --infra ./infra --ui http://<host>:8090 --ide http://<host>:8092

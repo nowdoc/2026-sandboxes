@@ -1,106 +1,43 @@
-# 2026-agent-sandbox
+# Agent sandbox experiments
 
-Research and prototypes for running **coding agents in isolated sandboxes**: a
-request (an issue or a prompt) goes in, an agent works inside a microVM with no
-real credentials, and the result comes out as a pull request that a human
-reviews.
+Research and prototypes for running coding agents in isolated environments and
+publishing their changes as pull requests. Real Git and LLM credentials stay
+outside the agent's environment.
 
-The work happened on one Linux host with nested KVM between 2026-11-01 and 2026-11-04. It is kept here so others can reuse
-the findings and, if they want, run the code again. The runtime scorecard is
-[below](#runtimes). Web reading and session logs are in [`research/`](research/).
+Tested on one Linux host with nested KVM, November 1–4, 2026. The current
+prototype, yfactory, uses Microsandbox (libkrun microVMs).
 
 ## Contents
 
-| Folder | What it is | State |
+| Directory | Purpose | Status |
 |---|---|---|
-| [`research/`](research/) | Web reading from 2026-11-01, session logs, and the notes of runtimes that were deleted | reference |
-| [`01-factory-poc/`](01-factory-poc/) | First PoC: Forgejo issue → sandbox → agent → PR, with one adapter per runtime (runc, gVisor, Microsandbox, Docker Sandboxes, E2B) and a security suite | archived, worked end to end |
-| [`02-yfactory/`](02-yfactory/) | The product that grew out of the PoC: orchestrator, Microsandbox service, opencode in the VM, review and revise, UI, and the deployment (`infra/`) | working prototype |
+| [`02-yfactory/`](02-yfactory/) | Prompt → microVM agent → pull request; UI, review and deployment | Working prototype |
+| [`01-factory-poc/`](01-factory-poc/) | Forgejo issue → agent → pull request; runtime adapters and security tests | Archived PoC |
+| [`research/`](research/) | Research, session logs and archived runtime results | Reference |
 
-## The short version
+## Getting started
 
-- **Runtime:** [Microsandbox](https://github.com/microsandbox/microsandbox)
-  (libkrun microVM) was the only runtime with every key property: microVM,
-  default-deny egress, credentials outside the sandbox, Docker Compose inside
-  without `privileged`, no account. It is beta. Docker Sandboxes (`sbx`) and
-  E2B were the runners-up; six others were tried and dropped.
-- **Credentials:** the sandbox gets only a per-run virtual LiteLLM key (or
-  just a run token that the orchestrator swaps for it) and a run token for
-  its own git branch. Real Git and LLM credentials never enter the VM.
-- **Git:** the agent pushes only to a branch the orchestrator owns (a staging
-  repo in the PoC, a per-run repo in yfactory). Every commit is checked, and
-  only then does the orchestrator push to the origin and open the PR. The
-  check rejects `.git`, `.github`, `.gitea`, `.forgejo`, `.gitmodules`,
-  `.gitattributes`, symlinks, submodules and merge commits, and more than 200
-  commits. yfactory also rejects `.gitlab-ci.yml`. `.gitignore` is allowed.
-- **Egress:** default-deny; the VM reaches only the orchestrator's task API
-  (LLM routes, its own git repo) and a package proxy with a domain allowlist.
-- **Security suite:** `tests/security.ts` (PoC) and
-  `02-yfactory/tests/security.ts` probe isolation from inside the sandbox;
-  results are in the `tests/results/` folders. The last yfactory run passed
-  161/161.
+Follow the [yfactory README](02-yfactory/README.md) for build instructions and
+the [deployment README](02-yfactory/infra/README.md) for setup and operations.
+The [PoC README](01-factory-poc/README.md) documents the archived implementation.
 
-## Quick start
+Services are for a trusted LAN behind VPN, not the public internet. The yfactory
+UI has no login. Replace `<host>` in examples with your host address.
 
-Each folder has its own README. In short:
-
-```bash
-# yfactory (the current prototype). Needs Docker and /dev/kvm.
-cd 02-yfactory
-./build.sh dev                     # builds ynfra/yfactory:<service>-dev images
-cd infra
-cp .env.example .env               # set YF_VERSION=dev, YF_VM_VERSION, YF_BIND, KVM_GID
-make init                          # generates secrets/ with random values
-$EDITOR secrets/litellm.env        # upstream model provider
-$EDITOR secrets/yfactory.env       # GitHub token for your repositories
-$EDITOR config/yfactory/*.json     # providers and repositories
-make up
-```
-
-```bash
-# The PoC
-cd 01-factory-poc
-cp orchestrator/.env.example orchestrator/.env
-./up.sh                            # Forgejo, LiteLLM, gateway; generates litellm/.env
-FACTORY_ROOT="$PWD" FACTORY_HOME="${HOME}" sudo -E docker compose -f orchestrator/compose.yml up -d --build
-```
-
-Addresses in the docs use `<host>` for the machine you run this on;
-replace them with your own. Nothing is meant to be exposed to the internet:
-there is little or no authentication on the UIs.
-
-## What is not here
-
-- **Secrets.** No `.env` files, keys, tokens or passwords. Every place that
-  needs one has a `.env.example` or is generated (`up.sh`, `make init`).
-- **Runtime state:** Forgejo data, git mirrors, run history, the Microsandbox
-  rootfs, E2B host state, S3 data, Docker images.
-- **Backups** of old file versions from the PoC.
-
-Some code comments are in Czech; the docs are in English.
-
-## License
-
-[MIT](LICENSE).
+Secrets, runtime data and Docker images are not included. Configuration templates
+and initialization scripts are provided in each project.
 
 ## Runtimes
 
-Where can an untrusted coding agent run so that it can build, test and even
-start a Docker Compose stack, while it cannot reach the host, the LAN, other
-sandboxes or any real credential?
+Nine runtimes plus runc and gVisor controls were evaluated November 1–2, 2026.
+The goal was to build, test and run Docker Compose without access to the host,
+LAN, other sandboxes or real credentials. Results are measured unless marked
+otherwise; concurrent tests make performance numbers indicative, not benchmarks.
 
-We tried nine runtimes plus runc and gVisor as controls, on one Linux host with nested KVM, between 2026-11-01 and 2026-11-02. Every
-value below was measured there unless the notes say otherwise. Tests ran
-concurrently, so performance numbers are indicative, not a benchmark.
-
-The matrix below is the current one. Per-runtime notes for the three that
-stayed are in [`01-factory-poc/runtimes/`](01-factory-poc/runtimes/). Notes and
-`results.json` for the ones that were deleted are in
-[`research/runtimes-archive/`](research/runtimes-archive/), and the matrix from
-before that cleanup is
-[`research/runtimes-archive/matrix-before-cleanup.md`](research/runtimes-archive/matrix-before-cleanup.md).
-The assignment each test followed is
-[`01-factory-poc/runtimes/BRIEF.md`](01-factory-poc/runtimes/BRIEF.md).
+See the [test brief](01-factory-poc/runtimes/BRIEF.md),
+[retained runtime notes](01-factory-poc/runtimes/README.md) and
+[archive](research/runtimes-archive/) for details, raw results and the
+[original matrix](research/runtimes-archive/matrix-before-cleanup.md).
 
 ### Criteria
 
@@ -168,31 +105,15 @@ against v28.
 Read about but not run: OpenRuntimes executor, Vercel Sandbox (hosted only),
 Daytona (repository archived), LangSmith (external).
 
-Left unfinished on the dropped runtimes:
-
-- Kata: end-to-end to a PR and credential injection. Two VMs (`kata-fc-cclh0`, `kata-fc-cqemu0`) were still around at the time; `dmsetup` was empty after the cleanup.
-- OpenShell: no TypeScript adapter. `openshell-gateway generate-certs` is required before a run. The per-task credential header was checked only against an echo server. A DNS TXT tunnel was not tested.
-- BoxLite and OpenSandbox: dockerd inside the sandbox was not tested past Compose 0/15.
+Incomplete tests and setup caveats are recorded in the runtime archive.
 
 ### Recommendation
 
-**Microsandbox** is the one runtime with ✅ in every key column: libkrun
-microVM, default-deny egress, credentials outside, Compose without
-`privileged`, no account, no host daemon, 1.25 s cold start. The risk is that
-it is beta. We built [yfactory](02-yfactory/) on it, running `msb` inside an
-unprivileged container that only has `/dev/kvm` (no root, no `privileged`, no
-Docker socket).
-
-**Docker Sandboxes** is the most complete functionally and a good fallback,
-but it is proprietary, needs a signed-in Docker account on the host, has a
-14 s cold start and no pause.
-
-**E2B Embed** has the fastest start and full Compose, but no credential
-injection, a heavy self-hosted stack (about ten services, hugepages) and
-security gaps around DNS and the metadata service.
-
-**gVisor** is the simplest step up from runc when Compose inside is not
-needed; with Compose it needs `privileged`.
+**Microsandbox** met the core requirements and was chosen for yfactory, but is
+beta. **Docker Sandboxes** is a fallback if a proprietary runtime and Docker
+account are acceptable. **E2B Embed** starts fastest but has a heavy deployment
+and documented security gaps. **gVisor** is a simpler option when Docker Compose
+inside the sandbox is not needed.
 
 ### Lessons that hold across runtimes
 
@@ -205,9 +126,10 @@ needed; with Compose it needs `privileged`.
   found were the host reachable through the bridge IP (fixed with
   `inhibit_ipv4`) and a writable rootfs shared between Microsandbox tasks
   (fixed with a per-task copy).
-- A virtual, per-task LLM key in the sandbox is acceptable; a real one is not.
-  yfactory goes one step further: the key stays in the orchestrator, and the VM
-  only has a run token. The sandbox may read comments and CI results through
-  the task API, but it never writes to the git host or chat itself: the
-  orchestrator does that after checking the result. The exact paths that check
-  rejects are listed in each prototype's README.
+- Keep provider credentials outside the agent's environment and validate every
+  commit before publishing. See the [PoC boundaries](01-factory-poc/README.md#security)
+  and [yfactory trust model](02-yfactory/infra/docs/ARCH.md) for implementation details.
+
+## License
+
+[MIT](LICENSE).

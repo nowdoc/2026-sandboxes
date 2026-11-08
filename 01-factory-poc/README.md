@@ -1,68 +1,96 @@
 # Software Factory PoC
 
-> Archived PoC, status as of 2026-11-02. The product continued in [../02-yfactory/](../02-yfactory/).
+Archived as of November 2, 2026; continued in [yfactory](../02-yfactory/).
+A Forgejo issue starts an agent in a sandbox and produces a PR from `factory-bot`.
+Real credentials stay outside the sandbox.
 
-Forgejo issue → sandbox → agent on `GLM-5.3-Flash` → PR from `factory-bot`. The sandbox has no real credentials.
+## Getting started
 
-## How to use it
-1. In Forgejo (<http://<host>:3000>, `factory-admin`) create an issue in `factory-admin/fixture` and describe the change in its body.
-2. In Yfactory (<http://<host>:8088>) pick a runtime and click "Implement". If the issue has the `factory` label, it starts on its own via the webhook.
-3. Within 10 to 30 s the issue gets a link to the PR. For further changes, comment `/factory <what to change>` in the PR.
+Requires Linux, Docker and the dependencies of the selected
+[runtime](runtimes/README.md). Keep services on a trusted LAN behind VPN.
 
-The model is set via `FACTORY_MODEL` (default `GLM-5.3-Flash`). `FACTORY_AGENT=fake` runs a scripted agent without an LLM for quick tests. The agent is [orchestrator/agent.py](orchestrator/agent.py): the model uses the tools `run`, `read_file`, `write_file` and `finish`; commit, rebase and push are done by the script.
+Configure Forgejo credentials and webhook settings in `orchestrator/.env`
+using [the template](orchestrator/.env.example). For a fresh fixture deployment,
+[forgejo/seed.sh](forgejo/seed.sh) creates users, tokens, the repository and this
+file after Forgejo starts; it skips seeding if the file already exists.
+[up.sh](up.sh) generates `litellm/.env` on first start.
 
-## Sandbox boundaries
-| What | Sandbox | Who does it |
+```bash
+cd 01-factory-poc
+./up.sh
+FACTORY_ROOT="$PWD" FACTORY_HOME="${HOME}" sudo -E docker compose -f orchestrator/compose.yml up -d --build
+```
+
+`up.sh` needs Docker access and permission to add a loopback IP alias.
+
+1. Create an issue in `factory-admin/fixture` as `factory-admin`.
+2. In the UI, select a runtime and click **Implement**, or add the `factory`
+   label to trigger the webhook.
+3. Follow the PR link posted on the issue. Comment `/factory <instructions>`
+   on the PR to request changes.
+
+## Configuration
+
+| Setting | Purpose | Default |
 |---|---|---|
-| LLM | virtual LiteLLM key per task (`mock`, `GLM-5.3-Flash`, `GLM-5.3`), no budget, deleted after the task | the real keys are held by LiteLLM |
-| Git clone | `/workspace` from the mirror in `state/mirrors`, one branch, `--depth 50` (`FACTORY_CLONE_DEPTH`), `origin` = staging | orchestrator, only `fetch` from upstream |
-| Git push | the agent pushes to the **staging** repo (`factory-bot/<owner>__<repo>`) via `$TASK_API_URL/git/...`, identity is `TASK_TOKEN`, the staging token is not in the sandbox. Multiple commits, `fetch` and rebase onto `origin/<base>` are allowed | orchestrator: `gitProxy` proxy, syncs the base and head branches from origin to staging before the task |
-| Promote to origin | the sandbox has no token and no network path to origin | the orchestrator pulls the branch from staging into a temporary bare repo, checks every commit (`checkCommits`) and pushes with `--force-with-lease`, then the PR |
-| Comments, review, CI | `GET $TASK_API_URL/task/comments`, `/task/ci` with `TASK_TOKEN` | the orchestrator reads only the issue and PR of the given task |
-| Reply to the PR | `POST /task/reply`, only stores the text | the orchestrator sends it as `factory-bot` after accepting the patch |
-| Slack | `GET /task/slack` returns 501, not wired up yet | orchestrator |
+| `FACTORY_RUNTIME` | Webhook runtime; UI runs select their own | `gvisor` |
+| `FACTORY_MODEL` | LLM model | `GLM-5.3-Flash` |
+| `FACTORY_AGENT` | Set to `fake` for scripted tests without an LLM | LLM agent |
+| `FACTORY_CLONE_DEPTH` | Git clone depth | `50` |
+| `FACTORY_PROJECTS` | Project registry path | `orchestrator/projects.json` |
 
-The Task API runs on port 4001 of the gateway. The token is valid for a single task and stops working when it ends or after 2 h. Wired up for `runc`, `gvisor`, `microsandbox`, `sbx` and `e2b`.
+[orchestrator/projects.json](orchestrator/projects.json) defines providers
+(`forgejo` only), the staging server and allowed projects. It references secret
+variable names (`tokenEnv`, `adminTokenEnv`, `webhookSecretEnv`), not values, and
+is validated at startup. Projects specify `repo`, `provider` and an optional `id`.
 
-Only a user with `write` permission can trigger it. Every commit on the branch is checked: it must not touch `.git`, `.github`, `.gitea`, `.forgejo`, `.gitmodules` or `.gitattributes`, and it must not add a symlink, a submodule or a merge commit. At most 200 commits. `.gitignore` is allowed. Iteration: a `/factory ...` comment in the PR.
+Webhooks use `/webhook/<provider id>`; `/webhook` selects the first provider.
+Unregistered repositories are ignored. Mirrors live in
+`state/mirrors/<provider>/<repo>.git`; staging repositories use
+`<provider>__<owner>__<repo>`. Runs are stored in `state/runs.json`, with at most
+three concurrent runs and no duplicate run for the same ticket.
 
-## Project registry
-[orchestrator/projects.json](orchestrator/projects.json) defines which repos the factory may work with and as which user. It contains no tokens, only the names of variables from `orchestrator/.env` (`tokenEnv`, `adminTokenEnv`, `webhookSecretEnv`). The file is validated at startup and an error carries only the variable name, never the value.
+## Security
 
-- `providers`: id → `kind` (only `forgejo` so far), `url`, `user` (the factory user in that system), `label` (optional, default `factory`)
-- `staging`: the git server between the sandbox and origin
-- `projects`: `repo`, `provider`, optionally `id` (default is `repo`; the UI and runs show `id`)
+The PoC orchestrator is privileged and mounts the host Docker socket; it is not
+isolated from the host. Only users with repository write permission can trigger runs.
 
-Webhook: `/webhook/<provider id>`, the bare `/webhook` belongs to the first provider in the file. A repo that is not in the registry is ignored. Any other path returns 404. Mirrors are in `state/mirrors/<provider>/<repo>.git`, the staging repo is named `<provider>__<owner>__<repo>`. The path to the file can be changed via `FACTORY_PROJECTS`.
-
-| Where | What |
+| Boundary | Behavior |
 |---|---|
-| [../README.md](../README.md#runtimes) | runtime scorecard |
-| [runtimes/README.md](runtimes/README.md) | the runtimes that stayed, with links to their notes |
-| [../research/README.md](../research/README.md) | web reading and session logs |
-| [AGENTS.md](AGENTS.md) | rules and commands for agents |
+| LLM | Per-task virtual LiteLLM key, no budget, deleted after the task; real keys stay in LiteLLM |
+| Git | Clone to `/workspace` from a mirror; push to staging through the task API using `TASK_TOKEN`, never a provider token |
+| Publishing | Orchestrator checks every commit, pushes with `--force-with-lease` and opens the PR |
+| Comments and CI | Task API reads only the task's issue and PR; replies are published by the orchestrator after patch acceptance |
+| Egress | Gateway-mediated LLM and package access; see runtime notes for isolation limitations |
+
+The task API is on gateway port `4001`. Its token expires when the task ends or
+after two hours. Slack integration is not implemented (`/task/slack` returns 501).
+
+Commit validation rejects `.git`, `.github`, `.gitea`, `.forgejo`, `.gitmodules`,
+`.gitattributes`, symlinks, submodules, merge commits and branches with more than
+200 commits. `.gitignore` is allowed.
 
 ## Services
-| Service | Address | Links |
+
+Replace `<host>` with the deployment address. Secrets are in local `.env` files,
+not in git. `factory-bot` uses `FORGEJO_BOT_TOKEN` from `orchestrator/.env`.
+
+| Service | Address | Authentication / configuration |
 |---|---|---|
-| Forgejo | <http://<host>:3000> | [compose](forgejo/compose.yml) · [documentation](https://forgejo.org/docs/latest/) |
-| LiteLLM | <http://<host>:4000> | [compose](litellm/compose.yml) · [config](litellm/config.yaml) · [documentation](https://docs.litellm.ai/) |
-| Gateway LLM and packages | task networks, nginx and squid additionally on `198.18.0.10:4000/4001/3128` (alias on `lo` from `up.sh`, for sbx and E2B) | [compose](gateway/compose.yml) · [nginx](gateway/nginx.conf) · [allowlist](gateway/allowlist.txt) |
-| Orchestrator and Yfactory | container `factory-orchestrator` (Node 24, TypeScript without a build step), `docker logs factory-orchestrator` | [compose](orchestrator/compose.yml) · [factory.ts](orchestrator/factory.ts) · [adapters](orchestrator/adapters/) |
-| Yfactory UI | <http://<host>:8088> | [yfactory.ts](orchestrator/yfactory.ts) · [ui](orchestrator/ui/) |
+| Forgejo | `http://<host>:3000` | `factory-admin`; `FORGEJO_ADMIN_PASSWORD` in `orchestrator/.env`; [Compose](forgejo/compose.yml) |
+| UI | `http://<host>:8088` | No login; [source](orchestrator/yfactory.ts) |
+| LiteLLM | `http://<host>:4000/ui` | `LITELLM_MASTER_KEY` in `litellm/.env`; default user `admin` is unverified; [config](litellm/config.yaml) |
+| E2B dashboard | `http://<host>:3001` | `E2B_API_KEY` in `runtimes/e2b/state/sdk.env` |
+| LLM and package gateways | Task networks; `198.18.0.10:4000/4001/3128` for sbx and E2B | [nginx](gateway/nginx.conf), [allowlist](gateway/allowlist.txt) |
+| Orchestrator | Container `factory-orchestrator` | [Compose](orchestrator/compose.yml); `docker logs factory-orchestrator` |
 
-## Logins
-Credentials are set in `orchestrator/.env` (see `orchestrator/.env.example`) and the other `.env` files named below.
+## Tests
 
-| Service | Address | User | Password |
-|---|---|---|---|
-| Yfactory | <http://<host>:8088> | no login | – |
-| Forgejo | <http://<host>:3000> | `factory-admin` | `FORGEJO_ADMIN_PASSWORD` in `orchestrator/.env` |
-| E2B dashboard | <http://<host>:3001> | – | `E2B_API_KEY` in `runtimes/e2b/state/sdk.env` |
-| LiteLLM UI | <http://<host>:4000/ui> | `admin` (LiteLLM default, unverified) | `LITELLM_MASTER_KEY` in `litellm/.env` |
+```bash
+tests/e2e.sh "Task title"
+sudo -E node tests/security.ts gvisor
+```
 
-Forgejo `factory-bot` is the orchestrator's service account and uses the token `FORGEJO_BOT_TOKEN`. `litellm/.env` has to be read via `sudo`.
-
-Yfactory: tickets from `factory-admin/fixture`, an "Implement" button with a runtime choice (`runc`, `gvisor`, `microsandbox`, `sbx`, `e2b`), a list of implementations from `state/runs.json`. Max 3 runs in parallel, the others wait in the `queued` state; the same ticket cannot be started twice. The webhook and the UI take the same path, the runtime for the webhook is determined by `FACTORY_RUNTIME`.
-
-Tests: [security.ts](tests/security.ts) · [probe.py](tests/probe.py) · [e2e.sh](tests/e2e.sh) · [compose_probe.sh](tests/compose_probe.sh) · [runtime brief](runtimes/BRIEF.md)
+Tests require a running deployment. See [security probes](tests/probe.py),
+[Compose probe](tests/compose_probe.sh), [runtime brief](runtimes/BRIEF.md) and
+[runtime comparison](../README.md#runtimes). Contributor rules are in [AGENTS.md](AGENTS.md).

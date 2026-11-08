@@ -9,15 +9,16 @@ Real credentials stay outside the sandbox.
 Requires Linux, Docker and the dependencies of the selected
 [runtime](runtimes/README.md). Keep services on a trusted LAN behind VPN.
 
-Configure Forgejo credentials and webhook settings in `orchestrator/.env`
-using [the template](orchestrator/.env.example). For a fresh fixture deployment,
-[forgejo/seed.sh](forgejo/seed.sh) creates users, tokens, the repository and this
-file after Forgejo starts; it skips seeding if the file already exists.
+For an existing Forgejo deployment, configure credentials and webhook settings in
+`orchestrator/.env` using [the template](orchestrator/.env.example). For a fresh
+fixture, leave that file absent: [forgejo/seed.sh](forgejo/seed.sh) creates it along
+with users, tokens and the repository; it skips seeding if the file already exists.
 [up.sh](up.sh) generates `litellm/.env` on first start.
 
 ```bash
 cd 01-factory-poc
 ./up.sh
+./forgejo/seed.sh              # fresh fixture only, once Forgejo is ready
 FACTORY_ROOT="$PWD" FACTORY_HOME="${HOME}" sudo -E docker compose -f orchestrator/compose.yml up -d --build
 ```
 
